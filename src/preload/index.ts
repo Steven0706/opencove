@@ -1,24 +1,67 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import { IPC_CHANNELS } from '../shared/constants/ipc'
+import type {
+  KillTerminalInput,
+  ResizeTerminalInput,
+  SpawnTerminalInput,
+  TerminalDataEvent,
+  TerminalExitEvent,
+  WorkspaceDirectory,
+  WriteTerminalInput,
+} from '../shared/types/api'
+
+type UnsubscribeFn = () => void
 
 // Custom APIs for renderer
-const api = {
-  // Add custom APIs here
+const coveApi = {
+  workspace: {
+    selectDirectory: (): Promise<WorkspaceDirectory | null> =>
+      ipcRenderer.invoke(IPC_CHANNELS.workspaceSelectDirectory),
+  },
+  pty: {
+    spawn: (payload: SpawnTerminalInput): Promise<{ sessionId: string }> =>
+      ipcRenderer.invoke(IPC_CHANNELS.ptySpawn, payload),
+    write: (payload: WriteTerminalInput): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.ptyWrite, payload),
+    resize: (payload: ResizeTerminalInput): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.ptyResize, payload),
+    kill: (payload: KillTerminalInput): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.ptyKill, payload),
+    onData: (listener: (event: TerminalDataEvent) => void): UnsubscribeFn => {
+      const handler = (_event: Electron.IpcRendererEvent, payload: TerminalDataEvent) => {
+        listener(payload)
+      }
+
+      ipcRenderer.on(IPC_CHANNELS.ptyData, handler)
+
+      return () => {
+        ipcRenderer.removeListener(IPC_CHANNELS.ptyData, handler)
+      }
+    },
+    onExit: (listener: (event: TerminalExitEvent) => void): UnsubscribeFn => {
+      const handler = (_event: Electron.IpcRendererEvent, payload: TerminalExitEvent) => {
+        listener(payload)
+      }
+
+      ipcRenderer.on(IPC_CHANNELS.ptyExit, handler)
+
+      return () => {
+        ipcRenderer.removeListener(IPC_CHANNELS.ptyExit, handler)
+      }
+    },
+  },
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
 // just add to the DOM global.
 if (process.contextIsolated) {
-  try {
-    contextBridge.exposeInMainWorld('electron', electronAPI)
-    contextBridge.exposeInMainWorld('api', api)
-  } catch (error) {
-    console.error(error)
-  }
+  contextBridge.exposeInMainWorld('electron', electronAPI)
+  contextBridge.exposeInMainWorld('coveApi', coveApi)
 } else {
   // @ts-ignore (define in dts)
   window.electron = electronAPI
   // @ts-ignore (define in dts)
-  window.api = api
+  window.coveApi = coveApi
 }

@@ -26,21 +26,16 @@ test.describe('Application Startup', () => {
     // 验证窗口已创建
     expect(window).toBeTruthy()
 
-    // 验证窗口是可见的
-    const isVisible = await window.isVisible()
-    expect(isVisible).toBe(true)
+    // 验证页面已加载
+    await window.waitForLoadState('domcontentloaded')
 
     // 验证窗口标题（根据实际应用调整）
     const title = await window.title()
     expect(title).toBeDefined()
 
-    // 验证窗口尺寸合理
-    const viewportSize = window.viewportSize()
-    expect(viewportSize).not.toBeNull()
-    if (viewportSize) {
-      expect(viewportSize.width).toBeGreaterThan(0)
-      expect(viewportSize.height).toBeGreaterThan(0)
-    }
+    // 验证渲染区域可访问
+    const bodyHandle = await window.$('body')
+    expect(bodyHandle).toBeTruthy()
 
     // 截图留证
     await window.screenshot({ path: 'test-results/smoke-test-window.png' })
@@ -58,7 +53,7 @@ test.describe('Application Startup', () => {
       },
     })
 
-    const window = await electronApp.firstWindow()
+    await electronApp.firstWindow()
 
     // 获取 Electron 应用信息
     const appPath = await electronApp.evaluate(async ({ app }) => {

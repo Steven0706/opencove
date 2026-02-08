@@ -1,6 +1,9 @@
 import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import { registerIpcHandlers } from './ipc/registerIpcHandlers'
+
+let ipcDisposable: ReturnType<typeof registerIpcHandlers> | null = null
 
 function createWindow(): void {
   // Create the browser window.
@@ -45,6 +48,8 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
+  ipcDisposable = registerIpcHandlers()
+
   createWindow()
 
   app.on('activate', function () {
@@ -58,7 +63,15 @@ app.whenReady().then(() => {
 
 // Quit when all windows are closed, except on macOS.
 app.on('window-all-closed', () => {
+  ipcDisposable?.dispose()
+  ipcDisposable = null
+
   if (process.platform !== 'darwin') {
     app.quit()
   }
+})
+
+app.on('before-quit', () => {
+  ipcDisposable?.dispose()
+  ipcDisposable = null
 })
