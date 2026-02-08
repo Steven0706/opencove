@@ -2,6 +2,8 @@ export const AGENT_PROVIDERS = ['claude-code', 'codex'] as const
 
 export type AgentProvider = (typeof AGENT_PROVIDERS)[number]
 
+export type TaskTitleProvider = 'default' | AgentProvider
+
 export const AGENT_PROVIDER_LABEL: Record<AgentProvider, string> = {
   'claude-code': 'Claude Code',
   codex: 'Codex',
@@ -24,6 +26,8 @@ export interface AgentSettings {
   customModelEnabledByProvider: AgentCustomModelEnabledByProvider
   customModelByProvider: AgentCustomModelByProvider
   customModelOptionsByProvider: AgentCustomModelOptionsByProvider
+  taskTitleProvider: TaskTitleProvider
+  taskTitleModel: string
 }
 
 export const DEFAULT_AGENT_SETTINGS: AgentSettings = {
@@ -40,6 +44,8 @@ export const DEFAULT_AGENT_SETTINGS: AgentSettings = {
     'claude-code': [],
     codex: [],
   },
+  taskTitleProvider: 'default',
+  taskTitleModel: '',
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -48,6 +54,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isValidProvider(value: unknown): value is AgentProvider {
   return typeof value === 'string' && AGENT_PROVIDERS.includes(value as AgentProvider)
+}
+
+function isValidTaskTitleProvider(value: unknown): value is TaskTitleProvider {
+  return value === 'default' || isValidProvider(value)
 }
 
 function normalizeTextValue(value: unknown): string {
@@ -91,6 +101,19 @@ export function resolveAgentModel(settings: AgentSettings, provider: AgentProvid
 
   const model = settings.customModelByProvider[provider].trim()
   return model.length > 0 ? model : null
+}
+
+export function resolveTaskTitleProvider(settings: AgentSettings): AgentProvider {
+  if (settings.taskTitleProvider === 'default') {
+    return settings.defaultProvider
+  }
+
+  return settings.taskTitleProvider
+}
+
+export function resolveTaskTitleModel(settings: AgentSettings): string | null {
+  const normalized = settings.taskTitleModel.trim()
+  return normalized.length > 0 ? normalized : null
 }
 
 export function normalizeAgentSettings(value: unknown): AgentSettings {
@@ -153,10 +176,18 @@ export function normalizeAgentSettings(value: unknown): AgentSettings {
     },
   )
 
+  const taskTitleProvider = isValidTaskTitleProvider(value.taskTitleProvider)
+    ? value.taskTitleProvider
+    : DEFAULT_AGENT_SETTINGS.taskTitleProvider
+
+  const taskTitleModel = normalizeTextValue(value.taskTitleModel)
+
   return {
     defaultProvider,
     customModelEnabledByProvider,
     customModelByProvider,
     customModelOptionsByProvider,
+    taskTitleProvider,
+    taskTitleModel,
   }
 }

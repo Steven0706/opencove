@@ -3,6 +3,8 @@ import {
   DEFAULT_AGENT_SETTINGS,
   normalizeAgentSettings,
   resolveAgentModel,
+  resolveTaskTitleModel,
+  resolveTaskTitleProvider,
 } from '../../../src/renderer/src/features/settings/agentConfig'
 
 describe('agent settings normalization', () => {
@@ -26,6 +28,8 @@ describe('agent settings normalization', () => {
         'claude-code': ['claude-opus-4-6', 'claude-sonnet-4-5-20250929'],
         codex: ['gpt-5.2-codex', 'gpt-5.2-codex'],
       },
+      taskTitleProvider: 'claude-code',
+      taskTitleModel: 'claude-opus-4-6',
     })
 
     expect(result.defaultProvider).toBe('codex')
@@ -38,6 +42,10 @@ describe('agent settings normalization', () => {
       'claude-sonnet-4-5-20250929',
     ])
     expect(result.customModelOptionsByProvider.codex).toEqual(['gpt-5.2-codex'])
+    expect(result.taskTitleProvider).toBe('claude-code')
+    expect(result.taskTitleModel).toBe('claude-opus-4-6')
+    expect(resolveTaskTitleProvider(result)).toBe('claude-code')
+    expect(resolveTaskTitleModel(result)).toBe('claude-opus-4-6')
     expect(resolveAgentModel(result, 'claude-code')).toBe('claude-opus-4-6')
     expect(resolveAgentModel(result, 'codex')).toBeNull()
   })
@@ -57,14 +65,20 @@ describe('agent settings normalization', () => {
         'claude-code': ['  claude-opus-4-6  ', ''],
         codex: ['  gpt-5.2-codex  '],
       },
+      taskTitleProvider: 'default',
+      taskTitleModel: '   ',
     })
 
     expect(result.customModelByProvider['claude-code']).toBe('')
     expect(result.customModelByProvider.codex).toBe('gpt-5.2-codex')
     expect(result.customModelOptionsByProvider['claude-code']).toEqual(['claude-opus-4-6'])
     expect(result.customModelOptionsByProvider.codex).toEqual(['gpt-5.2-codex'])
+    expect(result.taskTitleProvider).toBe('default')
+    expect(result.taskTitleModel).toBe('')
     expect(resolveAgentModel(result, 'claude-code')).toBeNull()
     expect(resolveAgentModel(result, 'codex')).toBe('gpt-5.2-codex')
+    expect(resolveTaskTitleProvider(result)).toBe('claude-code')
+    expect(resolveTaskTitleModel(result)).toBeNull()
   })
 
   it('migrates legacy modelByProvider to custom override', () => {

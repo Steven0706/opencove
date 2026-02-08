@@ -12,6 +12,8 @@ import type {
   ListAgentModelsInput,
   ResizeTerminalInput,
   SpawnTerminalInput,
+  SuggestTaskTitleInput,
+  SuggestTaskTitleResult,
   TerminalDataEvent,
   TerminalExitEvent,
   WorkspaceDirectory,
@@ -21,6 +23,7 @@ import { buildAgentLaunchCommand } from '../infrastructure/agent/AgentCommandFac
 import { listAgentModels } from '../infrastructure/agent/AgentModelService'
 import { locateAgentResumeSessionId } from '../infrastructure/agent/AgentSessionLocator'
 import { PtyManager } from '../infrastructure/pty/PtyManager'
+import { suggestTaskTitle } from '../infrastructure/task/TaskTitleGenerator'
 
 export interface IpcRegistrationDisposable {
   dispose: () => void
@@ -137,6 +140,34 @@ function normalizeEnsureDirectoryPayload(payload: unknown): EnsureDirectoryInput
   }
 
   return { path }
+}
+
+function normalizeSuggestTaskTitlePayload(payload: unknown): SuggestTaskTitleInput {
+  if (!payload || typeof payload !== 'object') {
+    throw new Error('Invalid payload for task:suggest-title')
+  }
+
+  const record = payload as Record<string, unknown>
+
+  const provider = normalizeProvider(record.provider)
+  const cwd = typeof record.cwd === 'string' ? record.cwd.trim() : ''
+  const requirement = typeof record.requirement === 'string' ? record.requirement.trim() : ''
+  const model = typeof record.model === 'string' ? record.model.trim() : ''
+
+  if (cwd.length === 0) {
+    throw new Error('Invalid cwd for task:suggest-title')
+  }
+
+  if (requirement.length === 0) {
+    throw new Error('Invalid requirement for task:suggest-title')
+  }
+
+  return {
+    provider,
+    cwd,
+    requirement,
+    model: model.length > 0 ? model : null,
+  }
 }
 
 export function registerIpcHandlers(): IpcRegistrationDisposable {
@@ -288,6 +319,14 @@ export function registerIpcHandlers(): IpcRegistrationDisposable {
     return result
   })
 
+  ipcMain.handle(
+    IPC_CHANNELS.taskSuggestTitle,
+    async (_event, payload: SuggestTaskTitleInput): Promise<SuggestTaskTitleResult> => {
+      const normalized = normalizeSuggestTaskTitlePayload(payload)
+      return await suggestTaskTitle(normalized)
+    },
+  )
+
   return {
     dispose: () => {
       ptyManager.disposeAll()
@@ -299,6 +338,7 @@ export function registerIpcHandlers(): IpcRegistrationDisposable {
       ipcMain.removeHandler(IPC_CHANNELS.ptyKill)
       ipcMain.removeHandler(IPC_CHANNELS.agentListModels)
       ipcMain.removeHandler(IPC_CHANNELS.agentLaunch)
+      ipcMain.removeHandler(IPC_CHANNELS.taskSuggestTitle)
     },
   }
 }

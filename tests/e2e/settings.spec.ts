@@ -32,6 +32,12 @@ test.describe('Settings', () => {
       await expect(defaultProvider).toBeVisible()
       await defaultProvider.selectOption('codex')
 
+      const taskTitleProvider = window.locator('[data-testid="settings-task-title-provider"]')
+      await taskTitleProvider.selectOption('codex')
+
+      const taskTitleModel = window.locator('[data-testid="settings-task-title-model"]')
+      await taskTitleModel.fill('gpt-5.2-codex')
+
       const customModelEnabled = window.locator(
         '[data-testid="settings-custom-model-enabled-codex"]',
       )
@@ -73,6 +79,8 @@ test.describe('Settings', () => {
             customModelOptionsByProvider?: {
               codex?: string[]
             }
+            taskTitleProvider?: string
+            taskTitleModel?: string
           }
         }
 
@@ -83,6 +91,8 @@ test.describe('Settings', () => {
       expect(persistedSettings?.customModelEnabledByProvider?.codex).toBe(true)
       expect(persistedSettings?.customModelByProvider?.codex).toBe('gpt-5.2-codex')
       expect(persistedSettings?.customModelOptionsByProvider?.codex).toContain('gpt-5.2-codex')
+      expect(persistedSettings?.taskTitleProvider).toBe('codex')
+      expect(persistedSettings?.taskTitleModel).toBe('gpt-5.2-codex')
     } finally {
       await electronApp.close()
     }

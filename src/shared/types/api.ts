@@ -87,3 +87,16 @@ export interface LaunchAgentResult {
   effectiveModel: string | null
   resumeSessionId: string | null
 }
+
+export interface SuggestTaskTitleInput {
+  provider: AgentProviderId
+  cwd: string
+  requirement: string
+  model?: string | null
+}
+
+export interface SuggestTaskTitleResult {
+  title: string
+  provider: AgentProviderId
+  effectiveModel: string | null
+}

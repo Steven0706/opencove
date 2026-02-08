@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   AGENT_PROVIDER_LABEL,
   AGENT_PROVIDERS,
   resolveAgentModel,
+  resolveTaskTitleProvider,
   type AgentProvider,
   type AgentSettings,
+  type TaskTitleProvider,
 } from '../agentConfig'
 
 interface ProviderModelCatalogEntry {
@@ -45,6 +47,20 @@ export function SettingsPanel({
     onChange({
       ...settings,
       defaultProvider: provider,
+    })
+  }
+
+  const updateTaskTitleProvider = (provider: TaskTitleProvider): void => {
+    onChange({
+      ...settings,
+      taskTitleProvider: provider,
+    })
+  }
+
+  const updateTaskTitleModel = (model: string): void => {
+    onChange({
+      ...settings,
+      taskTitleModel: model,
     })
   }
 
@@ -137,6 +153,10 @@ export function SettingsPanel({
   const selectedModel =
     resolveAgentModel(settings, settings.defaultProvider) ?? 'Default (Follow CLI)'
 
+  const effectiveTaskTitleProvider = useMemo(() => {
+    return resolveTaskTitleProvider(settings)
+  }, [settings])
+
   return (
     <div
       className="settings-backdrop"
@@ -178,6 +198,47 @@ export function SettingsPanel({
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="settings-panel__section">
+          <h3>Task Title Generation</h3>
+          <div className="settings-panel__row">
+            <span>CLI Provider</span>
+            <select
+              id="settings-task-title-provider"
+              data-testid="settings-task-title-provider"
+              value={settings.taskTitleProvider}
+              onChange={event => {
+                updateTaskTitleProvider(event.target.value as TaskTitleProvider)
+              }}
+            >
+              <option value="default">
+                Follow Default Agent ({AGENT_PROVIDER_LABEL[settings.defaultProvider]})
+              </option>
+              {AGENT_PROVIDERS.map(provider => (
+                <option value={provider} key={provider}>
+                  {AGENT_PROVIDER_LABEL[provider]}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="settings-panel__row">
+            <span>Model (optional)</span>
+            <input
+              id="settings-task-title-model"
+              data-testid="settings-task-title-model"
+              value={settings.taskTitleModel}
+              placeholder="Leave empty to follow CLI default model"
+              onChange={event => {
+                updateTaskTitleModel(event.target.value)
+              }}
+            />
+          </div>
+
+          <p className="settings-panel__hint">
+            Effective provider: {AGENT_PROVIDER_LABEL[effectiveTaskTitleProvider]}
+          </p>
         </div>
 
         <div className="settings-panel__section">

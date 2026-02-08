@@ -10,6 +10,8 @@ import type {
   ListAgentModelsResult,
   ResizeTerminalInput,
   SpawnTerminalInput,
+  SuggestTaskTitleInput,
+  SuggestTaskTitleResult,
   TerminalDataEvent,
   TerminalExitEvent,
   WorkspaceDirectory,
@@ -63,6 +65,10 @@ const coveApi = {
       ipcRenderer.invoke(IPC_CHANNELS.agentListModels, payload),
     launch: (payload: LaunchAgentInput): Promise<LaunchAgentResult> =>
       ipcRenderer.invoke(IPC_CHANNELS.agentLaunch, payload),
+  },
+  task: {
+    suggestTitle: (payload: SuggestTaskTitleInput): Promise<SuggestTaskTitleResult> =>
+      ipcRenderer.invoke(IPC_CHANNELS.taskSuggestTitle, payload),
   },
 }
 

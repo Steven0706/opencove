@@ -8,6 +8,8 @@ import type {
   ListAgentModelsResult,
   ResizeTerminalInput,
   SpawnTerminalInput,
+  SuggestTaskTitleInput,
+  SuggestTaskTitleResult,
   TerminalDataEvent,
   TerminalExitEvent,
   WorkspaceDirectory,
@@ -32,6 +34,9 @@ export interface CoveApi {
   agent: {
     listModels: (payload: ListAgentModelsInput) => Promise<ListAgentModelsResult>
     launch: (payload: LaunchAgentInput) => Promise<LaunchAgentResult>
+  }
+  task: {
+    suggestTitle: (payload: SuggestTaskTitleInput) => Promise<SuggestTaskTitleResult>
   }
 }
 
