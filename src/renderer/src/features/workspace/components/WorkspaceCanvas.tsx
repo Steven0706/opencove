@@ -177,7 +177,8 @@ function WorkspaceCanvasInner({
       dragHandle: '[data-node-drag-handle="true"]',
     }
 
-    onNodesChange([...nodes, nextNode])
+    const nextNodes = [...nodes, nextNode]
+    onNodesChange(nextNodes)
     setContextMenu(null)
   }, [contextMenu, nodes, onNodesChange, workspacePath])
 
