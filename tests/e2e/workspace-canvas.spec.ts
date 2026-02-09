@@ -907,7 +907,7 @@ test.describe('Workspace Canvas Interactions', () => {
         {
           id: 'agent-nav-node',
           title: 'codex · gpt-5.2-codex',
-          position: { x: 1400, y: 980 },
+          position: { x: 720, y: 460 },
           width: 520,
           height: 320,
           kind: 'agent',
@@ -1024,6 +1024,42 @@ test.describe('Workspace Canvas Interactions', () => {
       await agentNode.locator('.terminal-node__action', { hasText: 'Resume' }).click()
       await expect(agentNode.locator('.terminal-node__status')).toHaveText(/Restoring|Running/)
       await expect(agentNode.locator('.terminal-node__status')).toHaveText('Running')
+
+      const agentHeader = agentNode.locator('.terminal-node__header')
+      await agentHeader.click()
+
+      const fitViewButton = window.locator('.react-flow__controls-fitview')
+      await expect(fitViewButton).toBeVisible()
+      await fitViewButton.click()
+
+      await expect
+        .poll(async () => {
+          const delta = await readCenterDelta()
+          return Math.max(delta.dx, delta.dy)
+        })
+        .toBeGreaterThan(180)
+
+      const pane = window.locator('.workspace-canvas .react-flow__pane')
+      await expect(pane).toBeVisible()
+
+      const paneBox = await pane.boundingBox()
+      if (!paneBox) {
+        throw new Error('workspace pane bounding box unavailable')
+      }
+
+      await pane.click({
+        position: {
+          x: Math.floor(paneBox.width * 0.6),
+          y: Math.floor(paneBox.height * 0.5),
+        },
+      })
+
+      await expect
+        .poll(async () => {
+          const delta = await readCenterDelta()
+          return Math.max(delta.dx, delta.dy)
+        })
+        .toBeGreaterThan(180)
     } finally {
       await electronApp.close()
     }

@@ -832,7 +832,7 @@ function WorkspaceCanvasInner({
       return
     }
 
-    const target = nodes.find(node => node.id === focusNodeId)
+    const target = nodesRef.current.find(node => node.id === focusNodeId)
     if (!target) {
       return
     }
@@ -845,7 +845,7 @@ function WorkspaceCanvasInner({
         zoom: 1,
       },
     )
-  }, [focusNodeId, focusSequence, nodes, reactFlow])
+  }, [focusNodeId, focusSequence, reactFlow])
 
   normalizeViewportForTerminalInteractionRef.current = (nodeId: string) => {
     if (!agentSettings.normalizeZoomOnTerminalClick) {
