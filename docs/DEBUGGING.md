@@ -145,3 +145,20 @@ pnpm test:e2e
 对应用例：
 
 - `tests/e2e/workspace-canvas.spec.ts` 中 `wheel over terminal scrolls terminal viewport`。
+
+### 症状 3：拖动 resize 时终端内容错位/花屏
+
+常见原因是：拖拽 resize 过程中频繁触发 `fit + refresh + resize`，会干扰 Codex/Claude Code 的 TUI 重绘。
+
+修复策略：
+
+1. resize 拖拽期间只更新节点外框预览尺寸，不执行 xterm `fit/refresh`。
+2. 鼠标释放后再执行一次 `fit + pty.resize`（单次提交）。
+3. `scrollback` 状态更新与布局同步事件分离，避免拖拽过程重复触发布局重排。
+4. 交互上改为“单方向缩放”：右边手柄仅改宽度，底边手柄仅改高度。
+
+对应用例：
+
+- `tests/e2e/workspace-canvas.spec.ts` 中 `keeps terminal visible after drag, resize, and node interactions`。
+- `tests/e2e/workspace-canvas.spec.ts` 中 `keeps agent tui visible while dragging window`。
+

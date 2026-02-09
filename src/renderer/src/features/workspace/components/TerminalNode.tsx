@@ -118,6 +118,8 @@ function getStatusClassName(status: AgentRuntimeStatus | null): string {
   }
 }
 
+type ResizeAxis = 'horizontal' | 'vertical'
+
 interface SyncSizeOptions {
   sendPtyResize: boolean
   force?: boolean
@@ -147,6 +149,7 @@ export function TerminalNode({
     y: number
     width: number
     height: number
+    axis: ResizeAxis
   } | null>(null)
   const isPointerResizingRef = useRef(false)
   const syncFrameRef = useRef<number | null>(null)
@@ -272,6 +275,10 @@ export function TerminalNode({
       const viewportHeight = Math.round(container.clientHeight)
 
       if (viewportWidth <= 2 || viewportHeight <= 2) {
+        return
+      }
+
+      if (isPointerResizingRef.current && !force) {
         return
       }
 
@@ -484,7 +491,7 @@ export function TerminalNode({
   }, [height, scheduleSyncTerminalSize, width])
 
   const handleResizePointerDown = useCallback(
-    (event: ReactPointerEvent<HTMLButtonElement>) => {
+    (axis: ResizeAxis) => (event: ReactPointerEvent<HTMLButtonElement>) => {
       event.preventDefault()
       event.stopPropagation()
       event.currentTarget.setPointerCapture(event.pointerId)
@@ -494,6 +501,7 @@ export function TerminalNode({
         y: event.clientY,
         width,
         height,
+        axis,
       }
 
       isPointerResizingRef.current = true
@@ -514,14 +522,14 @@ export function TerminalNode({
         return
       }
 
-      const nextWidth = Math.max(MIN_WIDTH, Math.round(start.width + (event.clientX - start.x)))
+      if (start.axis === 'horizontal') {
+        const nextWidth = Math.max(MIN_WIDTH, Math.round(start.width + (event.clientX - start.x)))
+        setDraftSize({ width: nextWidth, height: start.height })
+        return
+      }
+
       const nextHeight = Math.max(MIN_HEIGHT, Math.round(start.height + (event.clientY - start.y)))
-
-      setDraftSize({ width: nextWidth, height: nextHeight })
-
-      scheduleSyncTerminalSize({
-        sendPtyResize: false,
-      })
+      setDraftSize({ width: start.width, height: nextHeight })
     }
 
     const handlePointerUp = () => {
@@ -532,7 +540,9 @@ export function TerminalNode({
       onResize(finalSize)
 
       resizeStartRef.current = null
-      scheduleSyncTerminalSize({ sendPtyResize: true, force: true })
+      requestAnimationFrame(() => {
+        scheduleSyncTerminalSize({ sendPtyResize: true, force: true })
+      })
     }
 
     window.addEventListener('pointermove', handlePointerMove)
@@ -619,9 +629,17 @@ export function TerminalNode({
       <div ref={containerRef} className="terminal-node__terminal nodrag" />
       <button
         type="button"
-        className="terminal-node__resizer nodrag"
-        onPointerDown={handleResizePointerDown}
-        aria-label="Resize terminal"
+        className="terminal-node__resizer terminal-node__resizer--right nodrag"
+        onPointerDown={handleResizePointerDown('horizontal')}
+        aria-label="Resize terminal width"
+        data-testid="terminal-resizer-right"
+      />
+      <button
+        type="button"
+        className="terminal-node__resizer terminal-node__resizer--bottom nodrag"
+        onPointerDown={handleResizePointerDown('vertical')}
+        aria-label="Resize terminal height"
+        data-testid="terminal-resizer-bottom"
       />
     </div>
   )

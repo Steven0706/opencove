@@ -233,21 +233,21 @@ test.describe('Workspace Canvas Interactions', () => {
       await expect(firstTerminal).toBeVisible()
       await expect(firstTerminal.locator('.xterm')).toBeVisible()
 
-      const resizer = firstTerminal.locator('.terminal-node__resizer')
-      const resizerBox = await resizer.boundingBox()
-      if (!resizerBox) {
-        throw new Error('terminal resizer bounding box unavailable')
+      const rightResizer = firstTerminal.locator('[data-testid="terminal-resizer-right"]')
+      const rightResizerBox = await rightResizer.boundingBox()
+      if (!rightResizerBox) {
+        throw new Error('terminal right resizer bounding box unavailable')
       }
 
-      const startX = resizerBox.x + resizerBox.width / 2
-      const startY = resizerBox.y + resizerBox.height / 2
+      const rightStartX = rightResizerBox.x + rightResizerBox.width / 2
+      const rightStartY = rightResizerBox.y + rightResizerBox.height / 2
 
-      await window.mouse.move(startX, startY)
+      await window.mouse.move(rightStartX, rightStartY)
       await window.mouse.down()
-      await window.mouse.move(startX + 120, startY + 80)
+      await window.mouse.move(rightStartX + 120, rightStartY + 80)
       await window.mouse.up()
 
-      const resizedNode = await window.evaluate(key => {
+      const widthResizedNode = await window.evaluate(key => {
         const raw = window.localStorage.getItem(key)
         if (!raw) {
           return null
@@ -266,9 +266,46 @@ test.describe('Workspace Canvas Interactions', () => {
         return state.workspaces?.[0]?.nodes?.find(node => node.id === 'node-1') ?? null
       }, storageKey)
 
-      expect(resizedNode).toBeTruthy()
-      expect(resizedNode?.width ?? 0).toBeGreaterThan(460)
-      expect(resizedNode?.height ?? 0).toBeGreaterThan(300)
+      expect(widthResizedNode).toBeTruthy()
+      expect(widthResizedNode?.width ?? 0).toBeGreaterThan(460)
+      expect(widthResizedNode?.height).toBe(300)
+
+      const bottomResizer = firstTerminal.locator('[data-testid="terminal-resizer-bottom"]')
+      const bottomResizerBox = await bottomResizer.boundingBox()
+      if (!bottomResizerBox) {
+        throw new Error('terminal bottom resizer bounding box unavailable')
+      }
+
+      const bottomStartX = bottomResizerBox.x + bottomResizerBox.width / 2
+      const bottomStartY = bottomResizerBox.y + bottomResizerBox.height / 2
+
+      await window.mouse.move(bottomStartX, bottomStartY)
+      await window.mouse.down()
+      await window.mouse.move(bottomStartX + 120, bottomStartY + 80)
+      await window.mouse.up()
+
+      const heightResizedNode = await window.evaluate(key => {
+        const raw = window.localStorage.getItem(key)
+        if (!raw) {
+          return null
+        }
+
+        const state = JSON.parse(raw) as {
+          workspaces?: Array<{
+            nodes?: Array<{
+              id: string
+              width: number
+              height: number
+            }>
+          }>
+        }
+
+        return state.workspaces?.[0]?.nodes?.find(node => node.id === 'node-1') ?? null
+      }, storageKey)
+
+      expect(heightResizedNode).toBeTruthy()
+      expect(heightResizedNode?.width).toBe(widthResizedNode?.width)
+      expect(heightResizedNode?.height ?? 0).toBeGreaterThan(300)
       await expect(firstTerminal.locator('.xterm')).toBeVisible()
 
       await terminals.nth(1).locator('.terminal-node__header').click()
