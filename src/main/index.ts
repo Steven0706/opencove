@@ -63,10 +63,10 @@ app.whenReady().then(() => {
 
 // Quit when all windows are closed, except on macOS.
 app.on('window-all-closed', () => {
-  ipcDisposable?.dispose()
-  ipcDisposable = null
-
   if (process.platform !== 'darwin') {
+    ipcDisposable?.dispose()
+    ipcDisposable = null
+
     app.quit()
   }
 })
