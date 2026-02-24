@@ -50,6 +50,8 @@
 -   **启动开发环境**：`pnpm dev`
 -   **运行单元测试**：`pnpm test -- --run`
 -   **运行 E2E 测试**：`pnpm test:e2e`
+    -   说明：`pnpm test:e2e` 已包含构建步骤，可直接使用。
+    -   若需单独执行 Playwright（如 `pnpm exec playwright test tests/e2e/xxx.spec.ts`），必须先执行 `pnpm build`，否则可能仍会使用旧的 `out/` 产物，导致结果与当前源码不一致。
 
 ## 文档地图（按问题找入口）
 
