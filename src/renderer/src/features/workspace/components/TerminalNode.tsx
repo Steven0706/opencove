@@ -4,7 +4,6 @@ import { Handle, Position } from '@xyflow/react'
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import '@xterm/xterm/css/xterm.css'
-import type { AgentRuntimeStatus, WorkspaceNodeKind } from '../types'
 import { resolveStablePtySize } from '../utils/terminalResize'
 import {
   MIN_HEIGHT,
@@ -16,30 +15,13 @@ import {
   createTerminalCommandInputState,
   parseTerminalCommandInput,
 } from './terminalNode/commandInput'
+import { createPtyWriteQueue, registerXtermPasteGuards } from './terminalNode/inputBridge'
 import { mergeScrollbackSnapshots } from './terminalNode/scrollback'
 import { TerminalNodeHeader } from './terminalNode/TerminalNodeHeader'
 import { resolveSuffixPrefixOverlap } from './terminalNode/overlap'
 import { useTerminalScrollback } from './terminalNode/useScrollback'
 import { shouldStopWheelPropagation } from './terminalNode/wheel'
-
-interface TerminalNodeProps {
-  sessionId: string
-  title: string
-  kind: WorkspaceNodeKind
-  status: AgentRuntimeStatus | null
-  lastError: string | null
-  width: number
-  height: number
-  scrollback: string | null
-  onClose: () => void
-  onResize: (size: { width: number; height: number }) => void
-  onScrollbackChange?: (scrollback: string) => void
-  onCommandRun?: (command: string) => void
-  onInteractionStart?: () => void
-  onStop?: () => void
-  onRerun?: () => void
-  onResume?: () => void
-}
+import type { TerminalNodeProps } from './TerminalNode.types'
 
 export function TerminalNode({
   sessionId,
@@ -184,14 +166,19 @@ export function TerminalNode({
     terminalRef.current = terminal
     fitAddonRef.current = fitAddon
 
+    let disposeXtermPasteGuards = () => undefined
+    const ptyWriteQueue = createPtyWriteQueue(data => window.coveApi.pty.write({ sessionId, data }))
+
     if (containerRef.current) {
       terminal.open(containerRef.current)
+      disposeXtermPasteGuards = registerXtermPasteGuards(containerRef.current)
       requestAnimationFrame(syncTerminalSize)
       if (window.coveApi.meta.isTest) {
         terminal.focus()
       }
     }
 
+    let isDisposed = false
     let shouldForwardTerminalData = false
 
     const disposable = terminal.onData(data => {
@@ -199,16 +186,20 @@ export function TerminalNode({
         return
       }
 
+      ptyWriteQueue.enqueue(data)
+      ptyWriteQueue.flush()
+
+      if (!onCommandRun) {
+        return
+      }
+
       const parsed = parseTerminalCommandInput(data, commandInputStateRef.current)
       commandInputStateRef.current = parsed.nextState
       parsed.commands.forEach(command => {
-        onCommandRun?.(command)
+        onCommandRun(command)
       })
-
-      void window.coveApi.pty.write({ sessionId, data })
     })
 
-    let isDisposed = false
     let isHydrating = true
     const bufferedDataChunks: string[] = []
     let bufferedExitCode: number | null = null
@@ -253,6 +244,7 @@ export function TerminalNode({
 
       scrollbackBufferRef.current.set(snapshot)
       isHydrating = false
+      ptyWriteQueue.flush()
 
       const bufferedData = bufferedDataChunks.join('')
       bufferedDataChunks.length = 0
@@ -345,6 +337,8 @@ export function TerminalNode({
       disposable.dispose()
       unsubscribeData()
       unsubscribeExit()
+      disposeXtermPasteGuards()
+      ptyWriteQueue.dispose()
       disposeScrollbackPublish()
       terminal.dispose()
       terminalRef.current = null
