@@ -59,6 +59,7 @@
 
 -   **Agent 行为准则与详细工作流**：`AGENTS.md` (The Single Source of Truth for Agents)
 -   **架构标准（Clean + Feature-First）**：`docs/ARCHITECTURE.md`
+-   **持久化（SQLite schema / migrations）**：`docs/PERSISTENCE.md`
 -   **UI 开发标准**：
     -   窗口 UI 标准：`docs/WINDOW_UI_STANDARD.md`
     -   任务 UI 标准：`docs/TASK_UI_STANDARD.md`
