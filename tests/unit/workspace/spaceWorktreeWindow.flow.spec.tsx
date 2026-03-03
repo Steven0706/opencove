@@ -147,7 +147,7 @@ describe('SpaceWorktreeWindow flow', () => {
 
     expect(await screen.findByTestId('space-worktree-open-switch')).toBeVisible()
     expect(screen.getByTestId('space-worktree-open-create')).toBeVisible()
-    expect(screen.getByTestId('space-worktree-open-detach')).toBeVisible()
+    expect(screen.queryByTestId('space-worktree-open-detach')).not.toBeInTheDocument()
   })
 
   it('supports detach with optional worktree removal confirmation', async () => {

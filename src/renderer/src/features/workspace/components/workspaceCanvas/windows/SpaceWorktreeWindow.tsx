@@ -70,7 +70,6 @@ export function SpaceWorktreeWindow({
   const [startPoint, setStartPoint] = useState('HEAD')
   const [existingBranchName, setExistingBranchName] = useState('')
   const [worktreeName, setWorktreeName] = useState('')
-  const [spaceNotes, setSpaceNotes] = useState('')
   const [isSuggesting, setIsSuggesting] = useState(false)
   const [removeWorktreeOnDetach, setRemoveWorktreeOnDetach] = useState(false)
   const [removeConfirmText, setRemoveConfirmText] = useState('')
@@ -102,14 +101,6 @@ export function SpaceWorktreeWindow({
       null,
     [normalizedSpaceDirectory, worktrees],
   )
-
-  const worktreePathPreview = useMemo(() => {
-    if (!isSafeWorktreeName(worktreeName)) {
-      return resolveWorktreesRoot(workspacePath, worktreesRoot)
-    }
-
-    return resolveWorktreePath(resolvedWorktreesRoot, worktreeName)
-  }, [resolvedWorktreesRoot, workspacePath, worktreeName, worktreesRoot])
 
   const spaceTasks = useMemo(() => {
     if (!space) {
@@ -155,7 +146,6 @@ export function SpaceWorktreeWindow({
     setStartPoint('HEAD')
     setExistingBranchName('')
     setWorktreeName('')
-    setSpaceNotes('')
     setIsSuggesting(false)
     setIsMutating(false)
     setRemoveWorktreeOnDetach(false)
@@ -226,10 +216,8 @@ export function SpaceWorktreeWindow({
 
         onUpdateSpaceDirectory(targetSpaceId, created.worktree.path, options)
         setSelectedWorktreePath(created.worktree.path)
-        setViewMode('home')
         setRemoveConfirmText('')
         setRemoveWorktreeOnDetach(false)
-        await refresh({ preferredWorktreePath: created.worktree.path })
         return
       }
 
@@ -262,15 +250,21 @@ export function SpaceWorktreeWindow({
       }
 
       setIsMutating(true)
+      let shouldClose = false
       try {
         await executePendingOperation(space.id, pending)
+        shouldClose = pending.kind === 'create'
       } catch (operationError) {
         setError(toErrorMessage(operationError))
       } finally {
         setIsMutating(false)
       }
+
+      if (shouldClose) {
+        onClose()
+      }
     },
-    [executePendingOperation, queueGuardIfNeeded, space],
+    [executePendingOperation, onClose, queueGuardIfNeeded, space],
   )
 
   const { applyPendingWithMismatch, applyPendingByClosingAll } = useSpaceWorktreeGuardActions({
@@ -279,11 +273,12 @@ export function SpaceWorktreeWindow({
     getBlockingNodes,
     closeNodesById,
     executePendingOperation,
+    onClose,
   })
 
   const handleSuggestNames = useSpaceWorktreeSuggestNames({
     space,
-    spaceNotes,
+    spaceNotes: '',
     spaceTasks,
     agentSettings,
     workspacePath,
@@ -404,7 +399,6 @@ export function SpaceWorktreeWindow({
     setStartPoint,
     setExistingBranchName,
     setWorktreeName,
-    setSpaceNotes,
     refresh,
     handleBind,
     handleSuggestNames,
@@ -439,11 +433,8 @@ export function SpaceWorktreeWindow({
         startPoint={startPoint}
         existingBranchName={existingBranchName}
         worktreeName={worktreeName}
-        worktreePathPreview={worktreePathPreview}
-        spaceNotes={spaceNotes}
         removeWorktreeOnDetach={removeWorktreeOnDetach}
         removeConfirmText={removeConfirmText}
-        resolvedWorktreesRoot={resolvedWorktreesRoot}
         workspacePath={workspacePath}
         error={error}
         guardIsBusy={guard?.isBusy ?? false}
@@ -462,7 +453,6 @@ export function SpaceWorktreeWindow({
         onStartPointChange={panelHandlers.onStartPointChange}
         onExistingBranchNameChange={panelHandlers.onExistingBranchNameChange}
         onWorktreeNameChange={panelHandlers.onWorktreeNameChange}
-        onSpaceNotesChange={panelHandlers.onSpaceNotesChange}
         onSuggestNames={panelHandlers.onSuggestNames}
         onCreate={panelHandlers.onCreate}
         onRemoveWorktreeOnDetachChange={panelHandlers.onRemoveWorktreeOnDetachChange}

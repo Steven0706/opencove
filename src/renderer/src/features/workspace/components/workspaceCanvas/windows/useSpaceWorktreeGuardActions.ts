@@ -13,6 +13,7 @@ export function useSpaceWorktreeGuardActions({
   getBlockingNodes,
   closeNodesById,
   executePendingOperation,
+  onClose,
 }: {
   guard: (SpaceWorktreeGuardState & { pending: PendingOperation; spaceId: string }) | null
   setGuard: React.Dispatch<
@@ -27,6 +28,7 @@ export function useSpaceWorktreeGuardActions({
     pending: PendingOperation,
     options?: UpdateSpaceDirectoryOptions,
   ) => Promise<void>
+  onClose: () => void
 }): {
   applyPendingWithMismatch: () => Promise<void>
   applyPendingByClosingAll: () => Promise<void>
@@ -55,6 +57,9 @@ export function useSpaceWorktreeGuardActions({
         markNodeDirectoryMismatch: true,
       })
       setGuard(null)
+      if (guard.pending.kind === 'create') {
+        onClose()
+      }
     } catch (operationError) {
       setGuard(previous =>
         previous
@@ -66,7 +71,7 @@ export function useSpaceWorktreeGuardActions({
           : previous,
       )
     }
-  }, [executePendingOperation, guard, setGuard])
+  }, [executePendingOperation, guard, onClose, setGuard])
 
   const applyPendingByClosingAll = useCallback(async () => {
     if (!guard) {
@@ -101,6 +106,9 @@ export function useSpaceWorktreeGuardActions({
 
       await executePendingOperation(guard.spaceId, guard.pending)
       setGuard(null)
+      if (guard.pending.kind === 'create') {
+        onClose()
+      }
     } catch (operationError) {
       setGuard(previous =>
         previous
@@ -112,7 +120,7 @@ export function useSpaceWorktreeGuardActions({
           : previous,
       )
     }
-  }, [closeNodesById, executePendingOperation, getBlockingNodes, guard, setGuard])
+  }, [closeNodesById, executePendingOperation, getBlockingNodes, guard, onClose, setGuard])
 
   return {
     applyPendingWithMismatch,

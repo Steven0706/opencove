@@ -13,7 +13,6 @@ export function useSpaceWorktreePanelHandlers({
   setStartPoint,
   setExistingBranchName,
   setWorktreeName,
-  setSpaceNotes,
   refresh,
   handleBind,
   handleSuggestNames,
@@ -34,7 +33,6 @@ export function useSpaceWorktreePanelHandlers({
   setStartPoint: React.Dispatch<React.SetStateAction<string>>
   setExistingBranchName: React.Dispatch<React.SetStateAction<string>>
   setWorktreeName: React.Dispatch<React.SetStateAction<string>>
-  setSpaceNotes: React.Dispatch<React.SetStateAction<string>>
   refresh: (options?: { preferredWorktreePath?: string }) => Promise<void>
   handleBind: () => Promise<void>
   handleSuggestNames: () => Promise<void>
@@ -55,7 +53,6 @@ export function useSpaceWorktreePanelHandlers({
   onStartPointChange: (value: string) => void
   onExistingBranchNameChange: (value: string) => void
   onWorktreeNameChange: (value: string) => void
-  onSpaceNotesChange: (value: string) => void
   onSuggestNames: () => void
   onCreate: () => void
   onRemoveWorktreeOnDetachChange: (checked: boolean) => void
@@ -116,10 +113,6 @@ export function useSpaceWorktreePanelHandlers({
         setWorktreeName(value)
         setError(null)
       },
-      onSpaceNotesChange: (value: string) => {
-        setSpaceNotes(value)
-        setError(null)
-      },
       onSuggestNames: () => {
         void handleSuggestNames()
       },
@@ -155,7 +148,6 @@ export function useSpaceWorktreePanelHandlers({
       setRemoveConfirmText,
       setRemoveWorktreeOnDetach,
       setSelectedWorktreePath,
-      setSpaceNotes,
       setStartPoint,
       setViewMode,
       setWorktreeName,

@@ -4,6 +4,12 @@ import type { WorkspaceSpaceState } from '../../../types'
 import { SpaceWorktreePanels } from './SpaceWorktreePanels'
 import type { BranchMode, SpaceWorktreeViewMode } from './spaceWorktree.shared'
 
+function getDirectoryName(pathValue: string): string {
+  const normalized = pathValue.trim().replace(/[\\/]+$/, '')
+  const parts = normalized.split(/[\\/]/).filter(Boolean)
+  return parts[parts.length - 1] ?? normalized
+}
+
 export function SpaceWorktreeWindowDialog({
   space,
   currentDirectoryLabel,
@@ -22,11 +28,8 @@ export function SpaceWorktreeWindowDialog({
   startPoint,
   existingBranchName,
   worktreeName,
-  worktreePathPreview,
-  spaceNotes,
   removeWorktreeOnDetach,
   removeConfirmText,
-  resolvedWorktreesRoot,
   workspacePath,
   error,
   guardIsBusy,
@@ -45,7 +48,6 @@ export function SpaceWorktreeWindowDialog({
   onStartPointChange,
   onExistingBranchNameChange,
   onWorktreeNameChange,
-  onSpaceNotesChange,
   onSuggestNames,
   onCreate,
   onRemoveWorktreeOnDetachChange,
@@ -70,11 +72,8 @@ export function SpaceWorktreeWindowDialog({
   startPoint: string
   existingBranchName: string
   worktreeName: string
-  worktreePathPreview: string
-  spaceNotes: string
   removeWorktreeOnDetach: boolean
   removeConfirmText: string
-  resolvedWorktreesRoot: string
   workspacePath: string
   error: string | null
   guardIsBusy: boolean
@@ -93,7 +92,6 @@ export function SpaceWorktreeWindowDialog({
   onStartPointChange: (value: string) => void
   onExistingBranchNameChange: (value: string) => void
   onWorktreeNameChange: (value: string) => void
-  onSpaceNotesChange: (value: string) => void
   onSuggestNames: () => void
   onCreate: () => void
   onRemoveWorktreeOnDetachChange: (checked: boolean) => void
@@ -101,6 +99,10 @@ export function SpaceWorktreeWindowDialog({
   onRemoveConfirmTextChange: (value: string) => void
   onDetachRemoveConfirm: () => void
 }): React.JSX.Element {
+  const displayWorktreeName = isSpaceOnWorkspaceRoot
+    ? space.name
+    : getDirectoryName(currentWorktree?.path ?? space.directoryPath)
+
   return (
     <div
       className="cove-window-backdrop workspace-space-worktree-backdrop"
@@ -120,7 +122,7 @@ export function SpaceWorktreeWindowDialog({
         }}
       >
         <header className="workspace-space-worktree__header">
-          <h3>Worktree · {space.name}</h3>
+          <h3>Worktree · {displayWorktreeName}</h3>
           <p className="workspace-space-worktree__meta">
             Current directory: <strong>{currentDirectoryLabel}</strong>
           </p>
@@ -152,11 +154,8 @@ export function SpaceWorktreeWindowDialog({
           startPoint={startPoint}
           existingBranchName={existingBranchName}
           worktreeName={worktreeName}
-          worktreePathPreview={worktreePathPreview}
-          spaceNotes={spaceNotes}
           removeWorktreeOnDetach={removeWorktreeOnDetach}
           removeConfirmText={removeConfirmText}
-          resolvedWorktreesRoot={resolvedWorktreesRoot}
           workspacePath={workspacePath}
           onOpenSwitch={onOpenSwitch}
           onOpenCreate={onOpenCreate}
@@ -171,7 +170,6 @@ export function SpaceWorktreeWindowDialog({
           onStartPointChange={onStartPointChange}
           onExistingBranchNameChange={onExistingBranchNameChange}
           onWorktreeNameChange={onWorktreeNameChange}
-          onSpaceNotesChange={onSpaceNotesChange}
           onSuggestNames={onSuggestNames}
           onCreate={onCreate}
           onRemoveWorktreeOnDetachChange={onRemoveWorktreeOnDetachChange}
