@@ -4,11 +4,12 @@ import {
   type Locator,
   type Page,
 } from '@playwright/test'
-import { mkdtemp, rm } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'path'
 
 const electronAppPath = path.resolve(__dirname, '../../')
+const testAgentStubScriptPath = path.resolve(__dirname, '../../scripts/test-agent-session-stub.mjs')
 export const testWorkspacePath = path.resolve(__dirname, '../../')
 export const storageKey = 'cove:m0:workspace-state'
 export const seededWorkspaceId = 'workspace-seeded'
@@ -185,9 +186,12 @@ export interface SeedWorkspace {
 
 async function launchAppInMode(
   launchMode: E2EWindowMode,
+  env: Record<string, string | undefined> = {},
   attempt = 0,
 ): Promise<{ electronApp: ElectronApplication; window: Page }> {
   const userDataDir = await createTestUserDataDir()
+  const testHomeDir = path.join(userDataDir, 'home')
+  await mkdir(testHomeDir, { recursive: true })
   let electronApp: ElectronApplication | null = null
 
   try {
@@ -196,9 +200,13 @@ async function launchAppInMode(
       env: {
         ...process.env,
         NODE_ENV: 'test',
+        HOME: testHomeDir,
+        USERPROFILE: testHomeDir,
         COVE_TEST_WORKSPACE: testWorkspacePath,
         COVE_TEST_USER_DATA_DIR: userDataDir,
+        COVE_TEST_AGENT_STUB_SCRIPT: testAgentStubScriptPath,
         COVE_E2E_WINDOW_MODE: launchMode,
+        ...env,
       },
     })
 
@@ -223,7 +231,7 @@ async function launchAppInMode(
     const shouldRetryCurrentMode = isRetryableLaunchError(error) && attempt < 1
     if (shouldRetryCurrentMode) {
       await delay(250)
-      return await launchAppInMode(launchMode, attempt + 1)
+      return await launchAppInMode(launchMode, env, attempt + 1)
     }
 
     throw error
@@ -232,6 +240,7 @@ async function launchAppInMode(
 
 async function launchAppWithModes(
   launchModes: E2EWindowMode[],
+  env: Record<string, string | undefined> = {},
   index = 0,
 ): Promise<{ electronApp: ElectronApplication; window: Page }> {
   const launchMode = launchModes[index]
@@ -240,21 +249,22 @@ async function launchAppWithModes(
   }
 
   try {
-    return await launchAppInMode(launchMode)
+    return await launchAppInMode(launchMode, env)
   } catch (error) {
     if (index >= launchModes.length - 1) {
       throw error
     }
 
-    return await launchAppWithModes(launchModes, index + 1)
+    return await launchAppWithModes(launchModes, env, index + 1)
   }
 }
 
 export async function launchApp(options?: {
   windowMode?: E2EWindowMode
+  env?: Record<string, string | undefined>
 }): Promise<{ electronApp: ElectronApplication; window: Page }> {
   const launchModes = resolveLaunchModes(options?.windowMode)
-  return await launchAppWithModes(launchModes)
+  return await launchAppWithModes(launchModes, options?.env)
 }
 
 export async function seedWorkspaceState(

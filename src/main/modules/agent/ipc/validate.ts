@@ -20,6 +20,7 @@ export function normalizeListModelsPayload(payload: unknown): ListAgentModelsInp
 
 export function resolveAgentTestStub(
   provider: AgentProviderId,
+  cwd: string,
   model: string | null,
   mode: LaunchAgentInput['mode'],
 ): {
@@ -28,6 +29,23 @@ export function resolveAgentTestStub(
 } | null {
   if (process.env.NODE_ENV !== 'test') {
     return null
+  }
+
+  const sessionScenario = process.env['COVE_TEST_AGENT_SESSION_SCENARIO']?.trim() ?? ''
+  const stubScriptPath = process.env['COVE_TEST_AGENT_STUB_SCRIPT']?.trim() ?? ''
+
+  if (sessionScenario.length > 0 && stubScriptPath.length > 0) {
+    return {
+      command: process.execPath,
+      args: [
+        stubScriptPath,
+        provider,
+        cwd,
+        mode ?? 'new',
+        model ?? 'default-model',
+        sessionScenario,
+      ],
+    }
   }
 
   if (process.platform === 'win32') {

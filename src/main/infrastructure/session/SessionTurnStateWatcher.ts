@@ -23,6 +23,19 @@ function isFileMissingError(error: unknown): boolean {
 
 const READ_CHUNK_BYTES = 64 * 1024
 
+function isLikelyJsonRecord(line: string): boolean {
+  for (let index = 0; index < line.length; index += 1) {
+    const code = line.charCodeAt(index)
+    if (code === 0x20 || code === 0x09 || code === 0x0a || code === 0x0d) {
+      continue
+    }
+
+    return code === 0x7b
+  }
+
+  return false
+}
+
 export class SessionTurnStateWatcher {
   private readonly provider: AgentProviderId
   private readonly sessionId: string
@@ -153,9 +166,26 @@ export class SessionTurnStateWatcher {
       }
 
       this.offset = position
+      this.flushRemainderIfComplete()
     } finally {
       await handle.close()
     }
+  }
+
+  private flushRemainderIfComplete(): void {
+    if (this.remainder.length === 0 || !isLikelyJsonRecord(this.remainder)) {
+      return
+    }
+
+    try {
+      JSON.parse(this.remainder)
+    } catch {
+      return
+    }
+
+    const line = this.remainder
+    this.remainder = ''
+    this.consumeLine(line)
   }
 
   private consumeTextChunk(textChunk: string): void {

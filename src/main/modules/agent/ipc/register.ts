@@ -47,6 +47,7 @@ export function registerAgentIpcHandlers(
 
     const testStub = resolveAgentTestStub(
       normalized.provider,
+      normalized.cwd,
       launchCommand.effectiveModel,
       normalized.mode,
     )
@@ -63,7 +64,11 @@ export function registerAgentIpcHandlers(
 
     const resumeSessionId = launchCommand.resumeSessionId
 
-    if (process.env.NODE_ENV !== 'test') {
+    const shouldStartStateWatcher =
+      process.env.NODE_ENV !== 'test' ||
+      process.env['COVE_TEST_ENABLE_SESSION_STATE_WATCHER'] === '1'
+
+    if (shouldStartStateWatcher) {
       ptyRuntime.startSessionStateWatcher({
         sessionId,
         provider: normalized.provider,
