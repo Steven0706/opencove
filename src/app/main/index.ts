@@ -1,4 +1,5 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { existsSync } from 'fs'
+import { app, shell, BrowserWindow, nativeImage } from 'electron'
 import { isAbsolute, join, relative, resolve, sep } from 'path'
 import { fileURLToPath } from 'url'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
@@ -169,6 +170,11 @@ function resolveE2EWindowMode(): E2EWindowMode {
   return 'normal'
 }
 
+function resolveRuntimeIconPath(): string | null {
+  const iconPath = resolve(__dirname, '../../build/icon.png')
+  return existsSync(iconPath) ? iconPath : null
+}
+
 function createWindow(): void {
   const devOrigin = is.dev ? resolveDevRendererOrigin() : null
   const rendererRootDir = join(__dirname, '../renderer')
@@ -177,6 +183,7 @@ function createWindow(): void {
   const keepRendererActiveWhenHidden = e2eWindowMode === 'hidden'
   const placeWindowOffscreen = e2eWindowMode === 'offscreen'
   const disableRendererSandboxForTests = process.env['NODE_ENV'] === 'test'
+  const runtimeIconPath = resolveRuntimeIconPath()
 
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -186,6 +193,7 @@ function createWindow(): void {
     ...(keepRendererActiveWhenHidden ? { paintWhenInitiallyHidden: true } : {}),
     ...(placeWindowOffscreen ? { x: E2E_OFFSCREEN_COORDINATE, y: E2E_OFFSCREEN_COORDINATE } : {}),
     autoHideMenuBar: true,
+    ...(runtimeIconPath ? { icon: runtimeIconPath } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -255,6 +263,11 @@ app.whenReady().then(() => {
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
+
+  const runtimeIconPath = resolveRuntimeIconPath()
+  if (process.platform === 'darwin' && runtimeIconPath) {
+    app.dock.setIcon(nativeImage.createFromPath(runtimeIconPath))
+  }
 
   ipcDisposable = registerIpcHandlers()
 

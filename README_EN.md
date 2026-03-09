@@ -1,7 +1,7 @@
 
 [简体中文](./README.md) | English
 
-![Cove_Header](./assets/images/cove_header.jpg)
+![OpenCove Header](./assets/images/opencove_header_readme.jpg)
 
 # OpenCove 🌌
 
