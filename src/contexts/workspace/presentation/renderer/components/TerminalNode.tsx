@@ -71,6 +71,7 @@ export function TerminalNode({
     markScrollbackDirty,
     scheduleScrollbackPublish,
     disposeScrollbackPublish,
+    cancelScrollbackPublish,
   } = useTerminalScrollback({
     sessionId,
     scrollback,
@@ -372,6 +373,7 @@ export function TerminalNode({
       disposeXtermPasteGuards()
       ptyWriteQueue.dispose()
       if (isInvalidated) {
+        cancelScrollbackPublish()
         clearCachedTerminalScreenStateInvalidation(nodeId, sessionId)
       } else {
         disposeScrollbackPublish()
@@ -381,6 +383,7 @@ export function TerminalNode({
       fitAddonRef.current = null
     }
   }, [
+    cancelScrollbackPublish,
     nodeId,
     disposeScrollbackPublish,
     markScrollbackDirty,

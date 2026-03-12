@@ -14,7 +14,7 @@ function createDeferred<T>() {
 }
 
 describe('Pty runtime subscriptions', () => {
-  it('cleans session subscriptions after exit', async () => {
+  it('cleans session subscriptions after exit and preserves the last snapshot', async () => {
     vi.useFakeTimers()
     vi.resetModules()
 
@@ -53,7 +53,11 @@ describe('Pty runtime subscriptions', () => {
       public write(): void {}
       public resize(): void {}
       public kill(): void {}
-      public delete(sessionId: string): void {
+      public delete(sessionId: string, options: { keepSnapshot?: boolean } = {}): void {
+        if (options.keepSnapshot === true) {
+          return
+        }
+
         snapshotBySession.delete(sessionId)
       }
       public disposeAll(): void {}
@@ -92,7 +96,7 @@ describe('Pty runtime subscriptions', () => {
     onExitHandler?.({ exitCode: 0 })
 
     expect(send.mock.calls.some(([channel]) => channel === IPC_CHANNELS.ptyExit)).toBe(true)
-    expect(runtime.snapshot('session-1')).toBe('')
+    expect(runtime.snapshot('session-1')).toBe('hello')
 
     send.mockClear()
 

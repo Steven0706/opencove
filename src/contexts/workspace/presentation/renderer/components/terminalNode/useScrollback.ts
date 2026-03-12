@@ -8,6 +8,7 @@ export interface TerminalScrollbackController {
   markScrollbackDirty: (immediate?: boolean) => void
   scheduleScrollbackPublish: (immediate?: boolean) => void
   disposeScrollbackPublish: () => void
+  cancelScrollbackPublish: () => void
 }
 
 export function useTerminalScrollback({
@@ -115,10 +116,20 @@ export function useTerminalScrollback({
     }
   }, [scheduleScrollbackPublish])
 
+  const cancelScrollbackPublish = useCallback(() => {
+    hasPendingScrollbackRef.current = false
+
+    if (publishTimerRef.current !== null) {
+      window.clearTimeout(publishTimerRef.current)
+      publishTimerRef.current = null
+    }
+  }, [])
+
   return {
     scrollbackBufferRef,
     markScrollbackDirty,
     scheduleScrollbackPublish,
     disposeScrollbackPublish,
+    cancelScrollbackPublish,
   }
 }
