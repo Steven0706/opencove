@@ -32,6 +32,7 @@ import { WorkspaceSelectionDraftOverlay } from './view/WorkspaceSelectionDraftOv
 import { WorkspaceSpaceActionMenu } from './view/WorkspaceSpaceActionMenu'
 import { WorkspaceSpaceRegionsOverlay } from './view/WorkspaceSpaceRegionsOverlay'
 import { WorkspaceSpaceSwitcher } from './view/WorkspaceSpaceSwitcher'
+import { useWorkspaceCanvasGlobalDismissals } from './hooks/useGlobalDismissals'
 import { TaskCreatorWindow } from './windows/TaskCreatorWindow'
 import { TaskDeleteConfirmationWindow } from './windows/TaskDeleteConfirmationWindow'
 import { TaskEditorWindow } from './windows/TaskEditorWindow'
@@ -259,6 +260,15 @@ export function WorkspaceCanvasView({
   getSpaceBlockingNodes,
   closeNodesById,
 }: WorkspaceCanvasViewProps): React.JSX.Element {
+  useWorkspaceCanvasGlobalDismissals({
+    contextMenu,
+    spaceActionMenu,
+    closeContextMenu,
+    canvasRef,
+    selectedNodeCount,
+    clearNodeSelection,
+  })
+
   const activeMenuSpace = React.useMemo(
     () =>
       spaceActionMenu
