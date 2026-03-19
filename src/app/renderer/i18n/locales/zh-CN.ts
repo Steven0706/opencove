@@ -98,6 +98,7 @@ export const zhCN = {
     title: '设置',
     nav: {
       general: '通用',
+      agent: 'Agent',
       canvas: '画布',
       tasks: '任务',
       models: '模型',
@@ -108,8 +109,15 @@ export const zhCN = {
       title: '通用',
       languageLabel: '界面语言',
       languageHelp: 'OpenCove 界面使用的语言。',
+    },
+    agent: {
+      title: 'Agent',
       defaultAgentLabel: '默认 Agent',
       defaultAgentHelp: '新任务和终端默认使用的 AI 提供方。',
+      agentProviderOrderLabel: 'Agent 菜单排序',
+      agentProviderOrderHelp: '控制菜单中 Agent 的显示顺序。',
+      moveUp: '上移',
+      moveDown: '下移',
       fullAccessLabel: '完全访问模式',
       fullAccessHelp: '为 Agent 关闭沙箱和人工审批。',
     },
