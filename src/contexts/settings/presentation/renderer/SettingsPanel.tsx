@@ -20,6 +20,8 @@ import { CanvasSection } from './settingsPanel/CanvasSection'
 import { GeneralSection } from './settingsPanel/GeneralSection'
 import { IntegrationsSection } from './settingsPanel/IntegrationsSection'
 import { ModelOverrideSection } from './settingsPanel/ModelOverrideSection'
+import { NotificationsSection } from './settingsPanel/NotificationsSection'
+import { SettingsPanelNavButton } from './settingsPanel/SettingsPanelNavButton'
 import { ShortcutsSection } from './settingsPanel/ShortcutsSection'
 import { TaskConfigurationSection } from './settingsPanel/TaskConfigurationSection'
 import { WorkspaceSection } from './settingsPanel/WorkspaceSection'
@@ -51,6 +53,7 @@ interface SettingsPanelProps {
 type CorePageId =
   | 'general'
   | 'agent'
+  | 'notifications'
   | 'canvas'
   | 'shortcuts'
   | 'task-configuration'
@@ -122,6 +125,16 @@ export function SettingsPanel({
     onChange({ ...settings, focusNodeOnClick: enabled })
   const updateFocusNodeTargetZoom = (zoom: FocusNodeTargetZoom): void =>
     onChange({ ...settings, focusNodeTargetZoom: zoom })
+  const updateStandbyBannerEnabled = (enabled: boolean): void =>
+    onChange({ ...settings, standbyBannerEnabled: enabled })
+  const updateStandbyBannerShowTask = (enabled: boolean): void =>
+    onChange({ ...settings, standbyBannerShowTask: enabled })
+  const updateStandbyBannerShowSpace = (enabled: boolean): void =>
+    onChange({ ...settings, standbyBannerShowSpace: enabled })
+  const updateStandbyBannerShowBranch = (enabled: boolean): void =>
+    onChange({ ...settings, standbyBannerShowBranch: enabled })
+  const updateStandbyBannerShowPullRequest = (enabled: boolean): void =>
+    onChange({ ...settings, standbyBannerShowPullRequest: enabled })
   const updateCanvasInputMode = (mode: CanvasInputMode): void =>
     onChange({ ...settings, canvasInputMode: mode })
   const updateStandardWindowSizeBucket = (bucket: StandardWindowSizeBucket): void =>
@@ -266,28 +279,6 @@ export function SettingsPanel({
     }
   }, [activePageId, onFocusNodeTargetZoomPreviewChange])
 
-  const NavButton = ({
-    id,
-    label,
-    testId,
-  }: {
-    id: SettingsPageId
-    label: string
-    testId?: string
-  }) => {
-    const isActive = activePageId === id
-    return (
-      <button
-        type="button"
-        data-testid={testId}
-        onClick={() => setActivePageId(id)}
-        className={`settings-panel__nav-button${isActive ? ' settings-panel__nav-button--active' : ''}`}
-      >
-        {label}
-      </button>
-    )
-  }
-
   return (
     <div
       className={`settings-backdrop${isFocusNodeTargetZoomPreviewing ? ' settings-backdrop--preview' : ''}`}
@@ -301,46 +292,59 @@ export function SettingsPanel({
           className="settings-panel__sidebar"
           aria-label={t('settingsPanel.nav.sectionsLabel')}
         >
-          <NavButton
-            id="general"
+          <SettingsPanelNavButton
+            isActive={activePageId === 'general'}
             label={t('settingsPanel.nav.general')}
             testId="settings-section-nav-general"
+            onClick={() => setActivePageId('general')}
           />
-          <NavButton
-            id="agent"
+          <SettingsPanelNavButton
+            isActive={activePageId === 'agent'}
             label={t('settingsPanel.nav.agent')}
             testId="settings-section-nav-agent"
+            onClick={() => setActivePageId('agent')}
           />
-          <NavButton
-            id="canvas"
+          <SettingsPanelNavButton
+            isActive={activePageId === 'notifications'}
+            label={t('settingsPanel.nav.notifications')}
+            testId="settings-section-nav-notifications"
+            onClick={() => setActivePageId('notifications')}
+          />
+          <SettingsPanelNavButton
+            isActive={activePageId === 'canvas'}
             label={t('settingsPanel.nav.canvas')}
             testId="settings-section-nav-canvas"
+            onClick={() => setActivePageId('canvas')}
           />
-          <NavButton
-            id="shortcuts"
+          <SettingsPanelNavButton
+            isActive={activePageId === 'shortcuts'}
             label={t('settingsPanel.nav.shortcuts')}
             testId="settings-section-nav-shortcuts"
+            onClick={() => setActivePageId('shortcuts')}
           />
-          <NavButton
-            id="task-configuration"
+          <SettingsPanelNavButton
+            isActive={activePageId === 'task-configuration'}
             label={t('settingsPanel.nav.tasks')}
             testId="settings-section-nav-task-configuration"
+            onClick={() => setActivePageId('task-configuration')}
           />
-          <NavButton
-            id="integrations"
+          <SettingsPanelNavButton
+            isActive={activePageId === 'integrations'}
             label={t('settingsPanel.nav.integrations')}
             testId="settings-section-nav-integrations"
+            onClick={() => setActivePageId('integrations')}
           />
 
           <div className="settings-panel__nav-group-label">{t('settingsPanel.nav.projects')}</div>
           <div className="settings-panel__nav-group">
             {workspaces.map(workspace => (
-              <NavButton
+              <SettingsPanelNavButton
                 key={workspace.id}
-                id={getWorkspacePageId(workspace.id)}
+                isActive={activePageId === getWorkspacePageId(workspace.id)}
                 label={
                   workspace.name.trim().length > 0 ? workspace.name : getFolderName(workspace.path)
                 }
+                onClick={() => setActivePageId(getWorkspacePageId(workspace.id))}
               />
             ))}
           </div>
@@ -396,6 +400,22 @@ export function SettingsPanel({
                   onAddCustomModelOption={addCustomModelOption}
                 />
               </>
+            ) : null}
+
+            {activePageId === 'notifications' ? (
+              <NotificationsSection
+                standbyBannerEnabled={settings.standbyBannerEnabled}
+                standbyBannerShowTask={settings.standbyBannerShowTask}
+                standbyBannerShowSpace={settings.standbyBannerShowSpace}
+                standbyBannerShowBranch={settings.standbyBannerShowBranch}
+                standbyBannerShowPullRequest={settings.standbyBannerShowPullRequest}
+                githubPullRequestsEnabled={settings.githubPullRequestsEnabled}
+                onChangeStandbyBannerEnabled={updateStandbyBannerEnabled}
+                onChangeStandbyBannerShowTask={updateStandbyBannerShowTask}
+                onChangeStandbyBannerShowSpace={updateStandbyBannerShowSpace}
+                onChangeStandbyBannerShowBranch={updateStandbyBannerShowBranch}
+                onChangeStandbyBannerShowPullRequest={updateStandbyBannerShowPullRequest}
+              />
             ) : null}
 
             {activePageId === 'integrations' ? (

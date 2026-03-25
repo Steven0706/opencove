@@ -114,7 +114,12 @@ export function useWorkspaceCanvasNodeCreation({
           width: defaultSize.width,
           height: defaultSize.height,
           kind,
-          status: kind === 'agent' ? resolveInitialAgentRuntimeStatus(agent?.prompt) : null,
+          status:
+            kind === 'agent'
+              ? agent?.launchMode === 'resume'
+                ? ('standby' as const)
+                : resolveInitialAgentRuntimeStatus(agent?.prompt)
+              : null,
           startedAt: now,
           endedAt: null,
           exitCode: null,

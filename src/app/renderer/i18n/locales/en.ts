@@ -70,6 +70,16 @@ export const en = {
     restartToUpdateShort: 'Restart',
     restartToUpdateTitle: 'Version {{version}} is ready to install',
   },
+  controlCenter: {
+    open: 'Control Center',
+    title: 'Control Center',
+    sidebar: 'Sidebar',
+    minimap: 'Minimap',
+    theme: 'Theme',
+    agentStandbyBanner: 'Agent standby banner',
+    on: 'On',
+    off: 'Off',
+  },
   whatsNew: {
     title: "What's New",
     subtitleRange: 'Updated from {{fromVersion}} to {{toVersion}}.',

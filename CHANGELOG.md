@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Settings: UI theme selector (system/light/dark) with system follow. (#40)
 - UI: App header with primary sidebar toggle + top-right settings (macOS uses unified title bar chrome).
 - UI: Command Center in header (search + project/space switcher) with Cmd/Ctrl+K and Cmd/Ctrl+P shortcuts.
+- UI: Control Center + agent standby banner notifications (with configurable context chips). (#81)
 - Spaces: Space Archives — archive Space snapshots + replay window (Command Center). (#80)
 - In-canvas GitHub pull request chip for worktree-bound Spaces (opens on GitHub; requires `gh`).
 - Settings → Integrations tab with a GitHub PR links toggle (default on).
@@ -53,6 +54,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Workspace canvas: clamp live snap-guide overlays to the viewport so vertical guides no longer trigger canvas scrollbars while dragging. (#42)
 - Workspace canvas: note-to-task conversion now resizes to the standard task size and pushes away overlapping nodes. (#63)
 - Prevented canvas zoom/pan when scrolling inside overlay windows.
+- Codex: Fixed agents getting stuck on `working` and missing standby notifications when switching projects or after restart. (#81)
 - Restored packaged terminal rendering by allowing xterm's required inline style channels in production and ignoring invalid cached terminal dimensions during hydration.
 - Terminal: Hydrate UTF-8 locale for GUI-launched terminals on macOS/Linux and enable Wayland IME integration on Linux. (#65)
 - Terminal: Preserve shell history arrow keys after terminal restore by avoiding stale xterm mode replay. (#65)

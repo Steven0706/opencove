@@ -2,12 +2,9 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from '@app/renderer/i18n'
 import { SettingsPanel } from '@contexts/settings/presentation/renderer/SettingsPanel'
 import { AGENT_PROVIDER_LABEL, resolveAgentModel } from '@contexts/settings/domain/agentSettings'
-import type { WorkspaceCanvasMessageTone } from '@contexts/workspace/presentation/renderer/components/workspaceCanvas/types'
-import type { WorkspaceState } from '@contexts/workspace/presentation/renderer/types'
-import { DEFAULT_WORKSPACE_MINIMAP_VISIBLE } from '@contexts/workspace/presentation/renderer/types'
 import { toPersistedState } from '@contexts/workspace/presentation/renderer/utils/persistence'
-import { AppMessage } from './components/AppMessage'
 import { AppHeader } from './components/AppHeader'
+import { AppShellOverlays } from './components/AppShellOverlays'
 import { CommandCenter } from './components/CommandCenter'
 import { DeleteProjectDialog } from './components/DeleteProjectDialog'
 import { ProjectContextMenu } from './components/ProjectContextMenu'
@@ -24,12 +21,14 @@ import { usePtyWorkspaceRuntimeSync } from './hooks/usePtyWorkspaceRuntimeSync'
 import { useProjectContextMenuDismiss } from './hooks/useProjectContextMenuDismiss'
 import { useProviderModelCatalog } from './hooks/useProviderModelCatalog'
 import { useAppKeybindings } from './hooks/useAppKeybindings'
+import { useAddWorkspaceAction } from './hooks/useAddWorkspaceAction'
+import { useAgentStandbyNotifications } from './hooks/useAgentStandbyNotifications'
+import { useFloatingMessage } from './hooks/useFloatingMessage'
 import { useWorkspaceStateHandlers } from './hooks/useWorkspaceStateHandlers'
 import { useAppUpdates } from './hooks/useAppUpdates'
 import { useWhatsNew } from './hooks/useWhatsNew'
 import type { ProjectContextMenuState } from './types'
 import { useAppStore } from './store/useAppStore'
-import { createDefaultWorkspaceViewport } from '@contexts/workspace/presentation/renderer/utils/workspaceSpaces'
 import { removeWorkspace } from './utils/removeWorkspace'
 import { WhatsNewDialog } from './components/WhatsNewDialog'
 import { formatKeyChord, resolveCommandKeybinding } from '@contexts/settings/domain/keybindings'
@@ -81,6 +80,10 @@ export default function App(): React.JSX.Element {
     producePersistedState,
   })
 
+  const { floatingMessage, showMessage: handleShowMessage } = useFloatingMessage()
+  const { notifications: agentNotifications, dismiss: handleDismissAgentNotification } =
+    useAgentStandbyNotifications()
+
   usePtyWorkspaceRuntimeSync({ requestPersistFlush })
 
   const activeWorkspace = useMemo(
@@ -93,12 +96,14 @@ export default function App(): React.JSX.Element {
   const isPrimarySidebarCollapsed = agentSettings.isPrimarySidebarCollapsed === true
 
   const [isCommandCenterOpen, setIsCommandCenterOpen] = useState(false)
+  const [isControlCenterOpen, setIsControlCenterOpen] = useState(false)
   const [isWorkspaceSearchOpen, setIsWorkspaceSearchOpen] = useState(false)
   const [isSpaceArchivesOpen, setIsSpaceArchivesOpen] = useState(false)
   const [isFocusNodeTargetZoomPreviewing, setIsFocusNodeTargetZoomPreviewing] = useState(false)
 
   const toggleCommandCenter = useCallback((): void => {
     setIsWorkspaceSearchOpen(false)
+    setIsControlCenterOpen(false)
     setIsSpaceArchivesOpen(false)
     setIsCommandCenterOpen(open => !open)
   }, [])
@@ -107,8 +112,20 @@ export default function App(): React.JSX.Element {
     setIsCommandCenterOpen(false)
   }, [])
 
+  const toggleControlCenter = useCallback((): void => {
+    setIsCommandCenterOpen(false)
+    setIsWorkspaceSearchOpen(false)
+    setIsSpaceArchivesOpen(false)
+    setIsControlCenterOpen(open => !open)
+  }, [])
+
+  const closeControlCenter = useCallback((): void => {
+    setIsControlCenterOpen(false)
+  }, [])
+
   const openWorkspaceSearch = useCallback((): void => {
     closeCommandCenter()
+    setIsControlCenterOpen(false)
     setIsSpaceArchivesOpen(false)
     setIsWorkspaceSearchOpen(true)
   }, [closeCommandCenter])
@@ -120,8 +137,9 @@ export default function App(): React.JSX.Element {
   const openSpaceArchives = useCallback((): void => {
     closeCommandCenter()
     closeWorkspaceSearch()
+    closeControlCenter()
     setIsSpaceArchivesOpen(true)
-  }, [closeCommandCenter, closeWorkspaceSearch])
+  }, [closeCommandCenter, closeControlCenter, closeWorkspaceSearch])
 
   const closeSpaceArchives = useCallback((): void => {
     setIsSpaceArchivesOpen(false)
@@ -137,12 +155,14 @@ export default function App(): React.JSX.Element {
     onOpenSettings: () => {
       closeCommandCenter()
       closeWorkspaceSearch()
+      closeControlCenter()
       closeSpaceArchives()
       setIsSettingsOpen(true)
     },
     onTogglePrimarySidebar: () => {
       closeCommandCenter()
       closeWorkspaceSearch()
+      closeControlCenter()
       closeSpaceArchives()
       setAgentSettings(prev => ({
         ...prev,
@@ -152,6 +172,7 @@ export default function App(): React.JSX.Element {
     onAddProject: () => {
       closeCommandCenter()
       closeWorkspaceSearch()
+      closeControlCenter()
       closeSpaceArchives()
       void handleAddWorkspace()
     },
@@ -167,6 +188,7 @@ export default function App(): React.JSX.Element {
 
     setIsCommandCenterOpen(false)
     setIsWorkspaceSearchOpen(false)
+    setIsControlCenterOpen(false)
     setIsSpaceArchivesOpen(false)
   }, [isSettingsOpen, projectDeleteConfirmation])
 
@@ -195,33 +217,6 @@ export default function App(): React.JSX.Element {
   )
   const commandCenterShortcutHint = formatKeyChord(platform, commandCenterBindings) || '—'
 
-  const [floatingMessage, setFloatingMessage] = useState<{
-    id: number
-    text: string
-    tone: WorkspaceCanvasMessageTone
-  } | null>(null)
-
-  useEffect(() => {
-    if (!floatingMessage) {
-      return
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setFloatingMessage(current => (current?.id === floatingMessage.id ? null : current))
-    }, 3200)
-
-    return () => {
-      window.clearTimeout(timeoutId)
-    }
-  }, [floatingMessage])
-
-  const handleShowMessage = useCallback(
-    (message: string, tone: WorkspaceCanvasMessageTone = 'info'): void => {
-      setFloatingMessage({ id: Date.now(), text: message, tone })
-    },
-    [],
-  )
-
   const { updateState, checkForUpdates, downloadUpdate, installUpdate } = useAppUpdates({
     policy: agentSettings.updatePolicy,
     channel: agentSettings.updateChannel,
@@ -238,34 +233,7 @@ export default function App(): React.JSX.Element {
   const activeProviderLabel = AGENT_PROVIDER_LABEL[agentSettings.defaultProvider]
   const activeProviderModel =
     resolveAgentModel(agentSettings, agentSettings.defaultProvider) ?? t('common.defaultFollowCli')
-  const handleAddWorkspace = useCallback(async (): Promise<void> => {
-    const selected = await window.opencoveApi.workspace.selectDirectory()
-    if (!selected) {
-      return
-    }
-
-    const store = useAppStore.getState()
-    const existing = store.workspaces.find(workspace => workspace.path === selected.path)
-    if (existing) {
-      store.setActiveWorkspaceId(existing.id)
-      return
-    }
-
-    const nextWorkspace: WorkspaceState = {
-      ...selected,
-      nodes: [],
-      worktreesRoot: '',
-      viewport: createDefaultWorkspaceViewport(),
-      isMinimapVisible: DEFAULT_WORKSPACE_MINIMAP_VISIBLE,
-      spaces: [],
-      activeSpaceId: null,
-      spaceArchiveRecords: [],
-    }
-
-    store.setWorkspaces(prev => [...prev, nextWorkspace])
-    store.setActiveWorkspaceId(nextWorkspace.id)
-    store.setFocusRequest(null)
-  }, [])
+  const handleAddWorkspace = useAddWorkspaceAction()
 
   const {
     handleWorkspaceNodesChange,
@@ -326,6 +294,7 @@ export default function App(): React.JSX.Element {
           activeWorkspaceName={activeWorkspace?.name ?? null}
           activeWorkspacePath={activeWorkspace?.path ?? null}
           isSidebarCollapsed={isPrimarySidebarCollapsed}
+          isControlCenterOpen={isControlCenterOpen}
           isCommandCenterOpen={isCommandCenterOpen}
           commandCenterShortcutHint={commandCenterShortcutHint}
           updateState={updateState}
@@ -335,11 +304,15 @@ export default function App(): React.JSX.Element {
               isPrimarySidebarCollapsed: !prev.isPrimarySidebarCollapsed,
             }))
           }}
+          onToggleControlCenter={() => {
+            toggleControlCenter()
+          }}
           onToggleCommandCenter={() => {
             toggleCommandCenter()
           }}
           onOpenSettings={() => {
             setIsFocusNodeTargetZoomPreviewing(false)
+            closeControlCenter()
             setIsSettingsOpen(true)
           }}
           onCheckForUpdates={() => {
@@ -383,6 +356,7 @@ export default function App(): React.JSX.Element {
           shortcutsEnabled={
             !isSettingsOpen &&
             !isCommandCenterOpen &&
+            !isControlCenterOpen &&
             !isWorkspaceSearchOpen &&
             !isSpaceArchivesOpen &&
             projectDeleteConfirmation === null
@@ -417,9 +391,24 @@ export default function App(): React.JSX.Element {
         />
       </div>
 
-      {floatingMessage ? (
-        <AppMessage tone={floatingMessage.tone} text={floatingMessage.text} />
-      ) : null}
+      <AppShellOverlays
+        floatingMessage={floatingMessage}
+        notifications={agentNotifications}
+        dismissNotification={handleDismissAgentNotification}
+        onFocusAgentNode={handleSelectAgentNode}
+        agentSettings={agentSettings}
+        setAgentSettings={setAgentSettings}
+        activeWorkspace={activeWorkspace}
+        isPrimarySidebarCollapsed={isPrimarySidebarCollapsed}
+        isControlCenterOpen={isControlCenterOpen}
+        onCloseControlCenter={closeControlCenter}
+        onMinimapVisibilityChange={handleWorkspaceMinimapVisibilityChange}
+        onOpenSettings={() => {
+          setIsFocusNodeTargetZoomPreviewing(false)
+          closeControlCenter()
+          setIsSettingsOpen(true)
+        }}
+      />
 
       <CommandCenter
         isOpen={isCommandCenterOpen}
