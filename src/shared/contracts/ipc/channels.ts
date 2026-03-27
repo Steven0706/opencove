@@ -52,6 +52,14 @@ export const IPC_CHANNELS = {
   agentResolveResumeSession: 'agent:resolve-resume-session',
   agentReadLastMessage: 'agent:read-last-message',
   taskSuggestTitle: 'task:suggest-title',
+  whisperTranscribe: 'whisper:transcribe',
+  whisperAuth: 'whisper:auth',
+  whisperHistory: 'whisper:history',
+  adminLlmProxy: 'admin:llm-proxy',
+  pgConnect: 'pg:connect',
+  pgDisconnect: 'pg:disconnect',
+  pgListTables: 'pg:list-tables',
+  pgQuery: 'pg:query',
 } as const
 
 export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS]

@@ -4,7 +4,11 @@ import type { StandardWindowSizeBucket } from '@contexts/settings/domain/agentSe
 import { resolveSpaceWorkingDirectory } from '@contexts/space/application/resolveSpaceWorkingDirectory'
 import type { Point, TerminalNodeData, WorkspaceSpaceState } from '../../../types'
 import type { ContextMenuState, CreateNodeInput } from '../types'
-import { resolveDefaultNoteWindowSize, resolveDefaultTerminalWindowSize } from '../constants'
+import {
+  resolveDefaultNoteWindowSize,
+  resolveDefaultPgViewerWindowSize,
+  resolveDefaultTerminalWindowSize,
+} from '../constants'
 import { resolveNodePlacementAnchorFromViewportCenter } from '../helpers'
 import {
   assignNodeToSpaceAndExpand,
@@ -198,6 +202,57 @@ export function createNoteNodeFromPaneContextMenu({
     },
     standardWindowSizeBucket,
     createNoteNode,
+    spacesRef,
+    nodesRef,
+    setNodes,
+    onSpacesChange,
+  })
+}
+
+export function createPgViewerNodeFromPaneContextMenu({
+  contextMenu,
+  createPgViewerNode,
+  standardWindowSizeBucket,
+  spacesRef,
+  nodesRef,
+  setNodes,
+  onSpacesChange,
+  setContextMenu,
+}: {
+  contextMenu: ContextMenuState | null
+  createPgViewerNode: (anchor: Point) => Node<TerminalNodeData> | null
+  standardWindowSizeBucket: StandardWindowSizeBucket
+  spacesRef: MutableRefObject<WorkspaceSpaceState[]>
+  nodesRef: MutableRefObject<Node<TerminalNodeData>[]>
+  setNodes: SetNodes
+  onSpacesChange: (spaces: WorkspaceSpaceState[]) => void
+  setContextMenu: (next: ContextMenuState | null) => void
+}): void {
+  if (!contextMenu || contextMenu.kind !== 'pane') {
+    return
+  }
+
+  setContextMenu(null)
+
+  const cursorAnchor = {
+    x: contextMenu.flowX,
+    y: contextMenu.flowY,
+  }
+  const nodeAnchor = resolveNodePlacementAnchorFromViewportCenter(
+    cursorAnchor,
+    resolveDefaultPgViewerWindowSize(standardWindowSizeBucket),
+  )
+
+  const targetSpace = findContainingSpaceByAnchor(spacesRef.current, cursorAnchor)
+  const created = createPgViewerNode(nodeAnchor)
+
+  if (!created || !targetSpace) {
+    return
+  }
+
+  assignNodeToSpaceAndExpand({
+    createdNodeId: created.id,
+    targetSpaceId: targetSpace.id,
     spacesRef,
     nodesRef,
     setNodes,

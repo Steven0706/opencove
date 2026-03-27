@@ -2,6 +2,7 @@ import type {
   AgentNodeData,
   ImageNodeData,
   NoteNodeData,
+  PgViewerNodeData,
   PersistedTerminalNode,
   PersistedWorkspaceState,
   SpaceArchiveRecord,
@@ -186,6 +187,24 @@ function ensurePersistedNoteData(value: unknown): NoteNodeData | null {
   }
 }
 
+function ensurePersistedPgViewerData(value: unknown): PgViewerNodeData | null {
+  if (!value || typeof value !== 'object') {
+    return null
+  }
+
+  const record = value as Record<string, unknown>
+
+  return {
+    connectionId: null,
+    host: typeof record.host === 'string' ? record.host : 'localhost',
+    port: typeof record.port === 'number' && Number.isFinite(record.port) ? record.port : 5432,
+    database: typeof record.database === 'string' ? record.database : '',
+    user: typeof record.user === 'string' ? record.user : '',
+    isConnected: false,
+    activeTable: null,
+  }
+}
+
 const CANVAS_IMAGE_ASSET_ID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -257,6 +276,7 @@ function ensurePersistedNode(node: unknown): PersistedTerminalNode | null {
   const task = ensurePersistedTaskData(record.task)
   const note = ensurePersistedNoteData(record.task)
   const image = ensurePersistedImageData(record.task)
+  const pgViewer = ensurePersistedPgViewerData(record.task)
   const runtimeKindInput = record.runtimeKind
   const runtimeKind: TerminalRuntimeKind | undefined =
     runtimeKindInput === 'windows' || runtimeKindInput === 'wsl' || runtimeKindInput === 'posix'
@@ -282,7 +302,7 @@ function ensurePersistedNode(node: unknown): PersistedTerminalNode | null {
     executionDirectory: normalizeOptionalString(record.executionDirectory),
     expectedDirectory: normalizeOptionalString(record.expectedDirectory),
     agent: kind === 'agent' ? agent : null,
-    task: kind === 'task' ? task : kind === 'note' ? note : kind === 'image' ? image : null,
+    task: kind === 'task' ? task : kind === 'note' ? note : kind === 'image' ? image : kind === 'pgViewer' ? pgViewer : null,
     position: {
       x: positionRecord.x,
       y: positionRecord.y,

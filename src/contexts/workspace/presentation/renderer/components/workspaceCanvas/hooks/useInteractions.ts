@@ -23,7 +23,10 @@ import {
   shouldFocusNodeFromClickTarget,
 } from './useInteractions.eventTargets'
 import { resolveMouseClientPoint } from './useInteractions.clientPoint'
-import { createNoteNodeFromPaneContextMenu } from './useInteractions.paneNodeCreation'
+import {
+  createNoteNodeFromPaneContextMenu,
+  createPgViewerNodeFromPaneContextMenu,
+} from './useInteractions.paneNodeCreation'
 
 type SetNodes = (
   updater: (prevNodes: Node<TerminalNodeData>[]) => Node<TerminalNodeData>[],
@@ -69,6 +72,7 @@ interface UseWorkspaceCanvasInteractionsParams {
       }
     },
   ) => Node<TerminalNodeData> | null
+  createPgViewerNode: (anchor: Point) => Node<TerminalNodeData> | null
   onShowMessage?: ShowWorkspaceCanvasMessage
   createImageNode: (
     anchor: Point,
@@ -103,6 +107,7 @@ export function useWorkspaceCanvasInteractions({
   standardWindowSizeBucket,
   createNodeForSession,
   createNoteNode,
+  createPgViewerNode,
   onShowMessage,
   createImageNode,
 }: UseWorkspaceCanvasInteractionsParams): {
@@ -122,6 +127,7 @@ export function useWorkspaceCanvasInteractions({
   handlePaneClick: (_event: React.MouseEvent | MouseEvent) => void
   createTerminalNode: () => Promise<void>
   createNoteNodeFromContextMenu: () => void
+  createPgViewerNodeFromContextMenu: () => void
   handleCanvasPaste: React.ClipboardEventHandler<HTMLDivElement>
   handleCanvasDragOver: React.DragEventHandler<HTMLDivElement>
   handleCanvasDrop: React.DragEventHandler<HTMLDivElement>
@@ -477,6 +483,28 @@ export function useWorkspaceCanvasInteractions({
     standardWindowSizeBucket,
   ])
 
+  const createPgViewerNodeFromContextMenu = useCallback(() => {
+    createPgViewerNodeFromPaneContextMenu({
+      contextMenu,
+      createPgViewerNode,
+      standardWindowSizeBucket,
+      spacesRef,
+      nodesRef,
+      setNodes,
+      onSpacesChange,
+      setContextMenu,
+    })
+  }, [
+    contextMenu,
+    createPgViewerNode,
+    nodesRef,
+    onSpacesChange,
+    setContextMenu,
+    setNodes,
+    spacesRef,
+    standardWindowSizeBucket,
+  ])
+
   const { handleCanvasPaste, handleCanvasDragOver, handleCanvasDrop } =
     useWorkspaceCanvasImageImport({
       canvasRef,
@@ -503,6 +531,7 @@ export function useWorkspaceCanvasInteractions({
     handlePaneClick,
     createTerminalNode,
     createNoteNodeFromContextMenu,
+    createPgViewerNodeFromContextMenu,
     handleCanvasPaste,
     handleCanvasDragOver,
     handleCanvasDrop,

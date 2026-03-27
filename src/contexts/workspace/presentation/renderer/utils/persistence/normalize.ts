@@ -53,6 +53,10 @@ export function normalizeNodeKind(value: unknown): WorkspaceNodeKind {
     return 'image'
   }
 
+  if (value === 'pgViewer') {
+    return 'pgViewer'
+  }
+
   return 'terminal'
 }
 

@@ -34,6 +34,8 @@ interface TerminalNodeFrameProps {
   onTitleCommit?: (title: string) => void
   onClose: () => void
   onCopyLastMessage?: () => Promise<void>
+  isMaximized?: boolean
+  onToggleMaximize?: () => void
   find: {
     isOpen: boolean
     query: string
@@ -69,6 +71,8 @@ export function TerminalNodeFrame({
   onTitleCommit,
   onClose,
   onCopyLastMessage,
+  isMaximized,
+  onToggleMaximize,
   find,
   onFindQueryChange,
   onFindNext,
@@ -149,6 +153,8 @@ export function TerminalNodeFrame({
         onTitleCommit={onTitleCommit}
         onClose={onClose}
         onCopyLastMessage={onCopyLastMessage}
+        isMaximized={isMaximized}
+        onToggleMaximize={onToggleMaximize}
       />
 
       {isAgentNode && lastError ? <div className="terminal-node__error">{lastError}</div> : null}

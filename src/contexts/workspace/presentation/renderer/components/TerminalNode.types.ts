@@ -32,4 +32,6 @@ export interface TerminalNodeProps {
   onTitleCommit?: (title: string) => void
   onCommandRun?: (command: string) => void
   onInteractionStart?: (options?: TerminalNodeInteractionOptions) => void
+  isMaximized?: boolean
+  onToggleMaximize?: () => void
 }

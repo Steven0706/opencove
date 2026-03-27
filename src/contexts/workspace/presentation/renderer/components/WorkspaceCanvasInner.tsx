@@ -1,9 +1,14 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useReactFlow, type Edge, type Node } from '@xyflow/react'
 import type { TerminalNodeData } from '../types'
 import * as workspaceCanvasHooks from './workspaceCanvas/hooks'
 import { WorkspaceCanvasView } from './workspaceCanvas/WorkspaceCanvasView'
 import type { WorkspaceCanvasProps } from './workspaceCanvas/types'
+import { adminBridge } from '@contexts/admin/presentation/renderer/adminBridge'
+import { maximizeNode } from '../utils/nodeMaximize'
+import { createTerminalNodeAtFlowPosition } from './workspaceCanvas/hooks/useInteractions.paneNodeCreation'
+import { resolveDefaultTerminalWindowSize } from './workspaceCanvas/constants'
+import { resolveNodePlacementAnchorFromViewportCenter } from './workspaceCanvas/helpers'
 export function WorkspaceCanvasInner({
   workspaceId,
   onShowMessage,
@@ -253,6 +258,7 @@ export function WorkspaceCanvasInner({
     handlePaneClick,
     createTerminalNode,
     createNoteNodeFromContextMenu,
+    createPgViewerNodeFromContextMenu,
     handleCanvasPaste,
     handleCanvasDragOver,
     handleCanvasDrop,
@@ -282,6 +288,7 @@ export function WorkspaceCanvasInner({
     standardWindowSizeBucket: agentSettings.standardWindowSizeBucket,
     createNodeForSession: nodeStore.createNodeForSession,
     createNoteNode: nodeStore.createNoteNode,
+    createPgViewerNode: nodeStore.createPgViewerNode,
     onShowMessage,
     createImageNode: nodeStore.createImageNode,
   })
@@ -384,6 +391,85 @@ export function WorkspaceCanvasInner({
     handleNodeContextMenu,
     handleSelectionContextMenu,
   })
+  useEffect(() => {
+    adminBridge.getNodes = () => reactFlow.getNodes()
+    adminBridge.createTerminalNode = async () => {
+      const centerScreen = {
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 2,
+      }
+      const flowCenter = reactFlow.screenToFlowPosition(centerScreen)
+      const size = resolveDefaultTerminalWindowSize(agentSettings.standardWindowSizeBucket)
+      const anchor = resolveNodePlacementAnchorFromViewportCenter(flowCenter, size)
+      let createdNodeId: string | null = null
+      const originalCreateNodeForSession = nodeStore.createNodeForSession
+      await createTerminalNodeAtFlowPosition({
+        anchor,
+        defaultTerminalProfileId: agentSettings.defaultTerminalProfileId,
+        standardWindowSizeBucket: agentSettings.standardWindowSizeBucket,
+        workspacePath,
+        spacesRef: canvasState.spacesRef,
+        nodesRef: nodeStore.nodesRef,
+        setNodes: nodeStore.setNodes,
+        onSpacesChange,
+        createNodeForSession: async (input) => {
+          const node = await originalCreateNodeForSession(input)
+          if (node) createdNodeId = node.id
+          return node
+        },
+      })
+      return createdNodeId
+    }
+    adminBridge.createNoteNode = (text?: string) => {
+      const centerScreen = {
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 2,
+      }
+      const flowCenter = reactFlow.screenToFlowPosition(centerScreen)
+      const node = nodeStore.createNoteNode(flowCenter)
+      if (node && text) {
+        nodeStore.updateNoteText(node.id, text)
+      }
+      return node?.id ?? null
+    }
+    adminBridge.closeNode = async (nodeId: string) => {
+      await requestNodeClose(nodeId)
+    }
+    adminBridge.toggleMaximizeNode = (nodeId: string) => {
+      maximizeNode(reactFlow, nodeId, nodeStore.setNodes)
+    }
+    adminBridge.focusNode = (nodeId: string) => {
+      const node = reactFlow.getNode(nodeId)
+      if (node) {
+        reactFlow.setCenter(
+          node.position.x + node.data.width / 2,
+          node.position.y + node.data.height / 2,
+          { duration: 200, zoom: 1 },
+        )
+      }
+    }
+    return () => {
+      adminBridge.getNodes = undefined
+      adminBridge.createTerminalNode = undefined
+      adminBridge.createNoteNode = undefined
+      adminBridge.closeNode = undefined
+      adminBridge.toggleMaximizeNode = undefined
+      adminBridge.focusNode = undefined
+    }
+  }, [
+    reactFlow,
+    nodeStore.createNodeForSession,
+    nodeStore.createNoteNode,
+    nodeStore.updateNoteText,
+    nodeStore.setNodes,
+    nodeStore.nodesRef,
+    canvasState.spacesRef,
+    requestNodeClose,
+    workspacePath,
+    agentSettings.defaultTerminalProfileId,
+    agentSettings.standardWindowSizeBucket,
+    onSpacesChange,
+  ])
   return (
     <WorkspaceCanvasView
       canvasRef={canvasState.canvasRef}
@@ -444,6 +530,7 @@ export function WorkspaceCanvasInner({
       onToggleMagneticSnapping={() => canvasState.setMagneticSnappingEnabled(enabled => !enabled)}
       createTerminalNode={createTerminalNode}
       createNoteNodeFromContextMenu={createNoteNodeFromContextMenu}
+      createPgViewerNode={createPgViewerNodeFromContextMenu}
       arrangeAll={arrangeAll}
       arrangeCanvas={arrangeCanvas}
       arrangeInSpace={arrangeInSpace}

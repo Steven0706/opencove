@@ -2,27 +2,34 @@ import type { Node } from '@xyflow/react'
 import type {
   ImageNodeData,
   NoteNodeData,
+  PgViewerNodeData,
   PersistedWorkspaceState,
   TaskNodeData,
   TerminalNodeData,
 } from '../types'
 
 function isTaskNodeData(
-  value: TaskNodeData | NoteNodeData | ImageNodeData | null,
+  value: TaskNodeData | NoteNodeData | ImageNodeData | PgViewerNodeData | null,
 ): value is TaskNodeData {
   return value !== null && typeof value === 'object' && 'requirement' in value
 }
 
 function isNoteNodeData(
-  value: TaskNodeData | NoteNodeData | ImageNodeData | null,
+  value: TaskNodeData | NoteNodeData | ImageNodeData | PgViewerNodeData | null,
 ): value is NoteNodeData {
   return value !== null && typeof value === 'object' && 'text' in value
 }
 
 function isImageNodeData(
-  value: TaskNodeData | NoteNodeData | ImageNodeData | null,
+  value: TaskNodeData | NoteNodeData | ImageNodeData | PgViewerNodeData | null,
 ): value is ImageNodeData {
   return value !== null && typeof value === 'object' && 'assetId' in value && 'mimeType' in value
+}
+
+function isPgViewerNodeData(
+  value: TaskNodeData | NoteNodeData | ImageNodeData | PgViewerNodeData | null,
+): value is PgViewerNodeData {
+  return value !== null && typeof value === 'object' && 'host' in value && 'database' in value && 'isConnected' in value
 }
 
 export function toRuntimeNodes(workspace: PersistedWorkspaceState): Node<TerminalNodeData>[] {
@@ -45,6 +52,12 @@ export function toRuntimeNodes(workspace: PersistedWorkspaceState): Node<Termina
       node.kind === 'note' ? (isNoteNodeData(node.task) ? node.task : { text: '' }) : null
     const image: ImageNodeData | null =
       node.kind === 'image' ? (isImageNodeData(node.task) ? node.task : null) : null
+    const pgViewer: PgViewerNodeData | null =
+      node.kind === 'pgViewer'
+        ? isPgViewerNodeData(node.task)
+          ? { ...node.task, connectionId: null, isConnected: false, activeTable: null }
+          : { connectionId: null, host: 'localhost', port: 5432, database: '', user: '', isConnected: false, activeTable: null }
+        : null
 
     const runtimeNode: Node<TerminalNodeData> = {
       id: node.id,
@@ -55,7 +68,9 @@ export function toRuntimeNodes(workspace: PersistedWorkspaceState): Node<Termina
             ? 'noteNode'
             : node.kind === 'image'
               ? 'imageNode'
-              : 'terminalNode',
+              : node.kind === 'pgViewer'
+                ? 'pgViewerNode'
+                : 'terminalNode',
       position: node.position,
       data: {
         sessionId: '',
@@ -79,6 +94,7 @@ export function toRuntimeNodes(workspace: PersistedWorkspaceState): Node<Termina
         task,
         note,
         image,
+        pgViewer,
       },
       draggable: true,
       selectable: node.kind !== 'note',

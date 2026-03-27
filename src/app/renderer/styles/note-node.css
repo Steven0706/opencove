@@ -35,6 +35,25 @@
   text-overflow: ellipsis;
 }
 
+.note-node__maximize {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--cove-text-muted);
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.16s ease;
+  flex-shrink: 0;
+}
+
+.note-node__maximize:hover {
+  color: var(--cove-text);
+}
+
 .note-node__close {
   width: 24px;
   height: 24px;

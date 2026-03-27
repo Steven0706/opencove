@@ -93,6 +93,7 @@ export function WorkspaceCanvasView({
   onToggleMagneticSnapping,
   createTerminalNode,
   createNoteNodeFromContextMenu,
+  createPgViewerNode,
   arrangeAll,
   arrangeCanvas,
   arrangeInSpace,
@@ -411,6 +412,7 @@ export function WorkspaceCanvasView({
         closeContextMenu={closeContextMenu}
         createTerminalNode={createTerminalNode}
         createNoteNodeFromContextMenu={createNoteNodeFromContextMenu}
+        createPgViewerNode={createPgViewerNode}
         openTaskCreator={openTaskCreator}
         openAgentLauncher={openAgentLauncher}
         agentProviderOrder={agentSettings.agentProviderOrder}

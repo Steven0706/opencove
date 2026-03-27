@@ -1,6 +1,7 @@
 import type { MutableRefObject, ReactElement } from 'react'
 import { ImageNode } from '../ImageNode'
 import type { NodeFrame, Point, TerminalNodeData } from '../../types'
+import { useNodeMaximizeStore } from '../../store/useNodeMaximizeStore'
 
 export function WorkspaceCanvasImageNodeType({
   data,
@@ -9,6 +10,7 @@ export function WorkspaceCanvasImageNodeType({
   selectNode,
   closeNodeRef,
   resizeNodeRef,
+  toggleMaximizeNodeRef,
   normalizeViewportForTerminalInteractionRef,
 }: {
   data: TerminalNodeData
@@ -17,8 +19,11 @@ export function WorkspaceCanvasImageNodeType({
   selectNode: (nodeId: string, options?: { toggle?: boolean }) => void
   closeNodeRef: MutableRefObject<(nodeId: string) => Promise<void>>
   resizeNodeRef: MutableRefObject<(nodeId: string, desiredFrame: NodeFrame) => void>
+  toggleMaximizeNodeRef: MutableRefObject<(nodeId: string) => void>
   normalizeViewportForTerminalInteractionRef: MutableRefObject<(nodeId: string) => void>
 }): ReactElement | null {
+  const maximizedNodeId = useNodeMaximizeStore(state => state.maximizedNodeId)
+
   if (!data.image) {
     return null
   }
@@ -30,6 +35,8 @@ export function WorkspaceCanvasImageNodeType({
       fileName={data.image.fileName}
       naturalWidth={data.image.naturalWidth}
       naturalHeight={data.image.naturalHeight}
+      isMaximized={maximizedNodeId === id}
+      onToggleMaximize={() => toggleMaximizeNodeRef.current(id)}
       position={nodePosition}
       width={data.width}
       height={data.height}

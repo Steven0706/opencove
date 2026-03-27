@@ -37,6 +37,12 @@ export function resolveDefaultAgentWindowSize(
   return resolveCanonicalNodeSize({ kind: 'agent', bucket })
 }
 
+export function resolveDefaultPgViewerWindowSize(
+  bucket: StandardWindowSizeBucket = DEFAULT_AGENT_SETTINGS.standardWindowSizeBucket,
+): Size {
+  return resolveCanonicalNodeSize({ kind: 'pgViewer', bucket })
+}
+
 export function resolveDefaultTerminalWindowSize(
   bucket: StandardWindowSizeBucket = DEFAULT_AGENT_SETTINGS.standardWindowSizeBucket,
 ): Size {

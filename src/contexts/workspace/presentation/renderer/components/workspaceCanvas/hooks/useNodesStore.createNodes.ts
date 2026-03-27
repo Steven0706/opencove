@@ -18,6 +18,7 @@ import {
   resolveDefaultAgentWindowSize,
   resolveDefaultImageWindowSize,
   resolveDefaultNoteWindowSize,
+  resolveDefaultPgViewerWindowSize,
   resolveDefaultTaskWindowSize,
   resolveDefaultTerminalWindowSize,
 } from '../constants'
@@ -48,7 +49,7 @@ export function useWorkspaceCanvasNodeCreation({
   standardWindowSizeBucket,
 }: UseWorkspaceCanvasNodeCreationParams): Pick<
   UseWorkspaceCanvasNodesStoreResult,
-  'createNodeForSession' | 'createNoteNode' | 'createTaskNode' | 'createImageNode'
+  'createNodeForSession' | 'createNoteNode' | 'createTaskNode' | 'createImageNode' | 'createPgViewerNode'
 > {
   const { t } = useTranslation()
 
@@ -137,6 +138,7 @@ export function useWorkspaceCanvasNodeCreation({
           task: null,
           note: null,
           image: null,
+          pgViewer: null,
         },
         draggable: true,
         selectable: false,
@@ -244,6 +246,7 @@ export function useWorkspaceCanvasNodeCreation({
             text: '',
           },
           image: null,
+          pgViewer: null,
         },
         draggable: true,
         selectable: true,
@@ -332,6 +335,7 @@ export function useWorkspaceCanvasNodeCreation({
           },
           note: null,
           image: null,
+          pgViewer: null,
         },
         draggable: true,
         selectable: true,
@@ -403,6 +407,7 @@ export function useWorkspaceCanvasNodeCreation({
           task: null,
           note: null,
           image,
+          pgViewer: null,
         },
         draggable: true,
         selectable: true,
@@ -416,10 +421,87 @@ export function useWorkspaceCanvasNodeCreation({
     [nodesRef, onNodeCreated, onRequestPersistFlush, onShowMessage, setNodes, spacesRef, t],
   )
 
+  const createPgViewerNode = useCallback(
+    (anchor: Point, placementOptions?: NodePlacementOptions): Node<TerminalNodeData> | null => {
+      const pgViewerSize = resolveDefaultPgViewerWindowSize(standardWindowSizeBucket)
+
+      const resolvedPlacement = resolveNodesPlacement({
+        anchor,
+        size: pgViewerSize,
+        getNodes: () => nodesRef.current,
+        getSpaceRects: () =>
+          spacesRef.current
+            .map(space => space.rect)
+            .filter(
+              (rect): rect is { x: number; y: number; width: number; height: number } =>
+                rect !== null,
+            ),
+        targetSpaceRect: placementOptions?.targetSpaceRect ?? null,
+        preferredDirection: placementOptions?.preferredDirection,
+      })
+
+      if (resolvedPlacement.canPlace !== true) {
+        onShowMessage?.(t('messages.noWindowSlotNearby'), 'warning')
+        return null
+      }
+
+      const nextNode: Node<TerminalNodeData> = {
+        id: crypto.randomUUID(),
+        type: 'pgViewerNode',
+        position: resolvedPlacement.placement,
+        data: {
+          sessionId: '',
+          title: 'PostgreSQL',
+          titlePinnedByUser: false,
+          width: pgViewerSize.width,
+          height: pgViewerSize.height,
+          kind: 'pgViewer',
+          status: null,
+          startedAt: null,
+          endedAt: null,
+          exitCode: null,
+          lastError: null,
+          scrollback: null,
+          agent: null,
+          task: null,
+          note: null,
+          image: null,
+          pgViewer: {
+            connectionId: null,
+            host: 'localhost',
+            port: 5432,
+            database: '',
+            user: '',
+            isConnected: false,
+            activeTable: null,
+          },
+        },
+        draggable: true,
+        selectable: true,
+      }
+
+      setNodes(prevNodes => [...prevNodes, nextNode])
+      onNodeCreated?.(nextNode.id)
+      onRequestPersistFlush?.()
+      return nextNode
+    },
+    [
+      nodesRef,
+      onNodeCreated,
+      onRequestPersistFlush,
+      onShowMessage,
+      setNodes,
+      spacesRef,
+      standardWindowSizeBucket,
+      t,
+    ],
+  )
+
   return {
     createNodeForSession,
     createNoteNode,
     createTaskNode,
     createImageNode,
+    createPgViewerNode,
   }
 }

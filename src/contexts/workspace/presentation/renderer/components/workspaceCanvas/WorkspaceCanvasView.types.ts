@@ -99,6 +99,7 @@ export interface WorkspaceCanvasViewProps {
   onToggleMagneticSnapping: () => void
   createTerminalNode: () => Promise<void>
   createNoteNodeFromContextMenu: () => void
+  createPgViewerNode: () => void
   arrangeAll: (style?: WorkspaceArrangeStyle) => void
   arrangeCanvas: (style?: WorkspaceArrangeStyle) => void
   arrangeInSpace: (spaceId: string, style?: WorkspaceArrangeStyle) => void

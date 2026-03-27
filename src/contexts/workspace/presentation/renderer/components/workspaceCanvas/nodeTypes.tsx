@@ -7,7 +7,9 @@ import { resolveTaskExecutionContext } from '@contexts/session/application/resol
 import type { NodeFrame, TerminalNodeData, WorkspaceSpaceState } from '../../types'
 import type { LabelColor } from '@shared/types/labelColor'
 import { useScrollbackStore } from '../../store/useScrollbackStore'
+import { useNodeMaximizeStore } from '../../store/useNodeMaximizeStore'
 import { WorkspaceCanvasImageNodeType } from './nodeTypes.image'
+import { WorkspaceCanvasPgViewerNodeType } from './nodeTypes.pgViewer'
 import type {
   QuickUpdateTaskRequirement,
   QuickUpdateTaskTitle,
@@ -44,6 +46,7 @@ function TerminalNodeType({
   selectNode,
   closeNodeRef,
   resizeNodeRef,
+  toggleMaximizeNodeRef,
   copyAgentLastMessageRef,
   updateNodeScrollbackRef,
   normalizeViewportForTerminalInteractionRef,
@@ -58,6 +61,7 @@ function TerminalNodeType({
   selectNode: (nodeId: string, options?: { toggle?: boolean }) => void
   closeNodeRef: MutableRefObject<(nodeId: string) => Promise<void>>
   resizeNodeRef: MutableRefObject<(nodeId: string, desiredFrame: NodeFrame) => void>
+  toggleMaximizeNodeRef: MutableRefObject<(nodeId: string) => void>
   copyAgentLastMessageRef: MutableRefObject<(nodeId: string) => Promise<void>>
   updateNodeScrollbackRef: MutableRefObject<UpdateNodeScrollback>
   normalizeViewportForTerminalInteractionRef: MutableRefObject<(nodeId: string) => void>
@@ -65,6 +69,7 @@ function TerminalNodeType({
   renameTerminalTitleRef: MutableRefObject<(nodeId: string, title: string) => void>
 }): ReactElement {
   const scrollback = useScrollbackStore(state => state.scrollbackByNodeId[id] ?? null)
+  const maximizedNodeId = useNodeMaximizeStore(state => state.maximizedNodeId)
   const nodePosition = useNodePosition(id)
   const labelColor =
     (data as TerminalNodeData & { effectiveLabelColor?: LabelColor | null }).effectiveLabelColor ??
@@ -77,6 +82,8 @@ function TerminalNodeType({
       title={data.title}
       kind={data.kind}
       labelColor={labelColor}
+      isMaximized={maximizedNodeId === id}
+      onToggleMaximize={() => toggleMaximizeNodeRef.current(id)}
       terminalThemeMode={
         data.kind === 'agent' && data.agent?.provider === 'opencode' ? 'dark' : 'sync-with-ui'
       }
@@ -160,6 +167,7 @@ function NoteNodeType({
   clearNodeSelectionRef,
   closeNodeRef,
   resizeNodeRef,
+  toggleMaximizeNodeRef,
   updateNoteTextRef,
   normalizeViewportForTerminalInteractionRef,
 }: {
@@ -169,9 +177,11 @@ function NoteNodeType({
   clearNodeSelectionRef: MutableRefObject<() => void>
   closeNodeRef: MutableRefObject<(nodeId: string) => Promise<void>>
   resizeNodeRef: MutableRefObject<(nodeId: string, desiredFrame: NodeFrame) => void>
+  toggleMaximizeNodeRef: MutableRefObject<(nodeId: string) => void>
   updateNoteTextRef: MutableRefObject<(nodeId: string, text: string) => void>
   normalizeViewportForTerminalInteractionRef: MutableRefObject<(nodeId: string) => void>
 }): ReactElement | null {
+  const maximizedNodeId = useNodeMaximizeStore(state => state.maximizedNodeId)
   const nodePosition = useNodePosition(id)
   const labelColor =
     (data as TerminalNodeData & { effectiveLabelColor?: LabelColor | null }).effectiveLabelColor ??
@@ -185,6 +195,8 @@ function NoteNodeType({
     <NoteNode
       text={data.note.text}
       labelColor={labelColor}
+      isMaximized={maximizedNodeId === id}
+      onToggleMaximize={() => toggleMaximizeNodeRef.current(id)}
       position={nodePosition}
       width={data.width}
       height={data.height}
@@ -229,6 +241,7 @@ interface WorkspaceCanvasNodeTypesParams {
   clearNodeSelectionRef: MutableRefObject<() => void>
   closeNodeRef: MutableRefObject<(nodeId: string) => Promise<void>>
   resizeNodeRef: MutableRefObject<(nodeId: string, desiredFrame: NodeFrame) => void>
+  toggleMaximizeNodeRef: MutableRefObject<(nodeId: string) => void>
   copyAgentLastMessageRef: MutableRefObject<(nodeId: string) => Promise<void>>
   updateNoteTextRef: MutableRefObject<(nodeId: string, text: string) => void>
   updateNodeScrollbackRef: MutableRefObject<UpdateNodeScrollback>
@@ -255,6 +268,7 @@ export function useWorkspaceCanvasNodeTypes({
   clearNodeSelectionRef,
   closeNodeRef,
   resizeNodeRef,
+  toggleMaximizeNodeRef,
   copyAgentLastMessageRef,
   updateNoteTextRef,
   updateNodeScrollbackRef,
@@ -281,6 +295,7 @@ export function useWorkspaceCanvasNodeTypes({
   return useMemo(() => {
     const TaskNodeType = ({ data, id }: { data: TerminalNodeData; id: string }) => {
       const linkedAgentNodeId = data.task?.linkedAgentNodeId ?? null
+      const maximizedNodeId = useNodeMaximizeStore(state => state.maximizedNodeId)
       const nodePosition = useNodePosition(id)
       const labelColor =
         (data as TerminalNodeData & { effectiveLabelColor?: LabelColor | null })
@@ -338,6 +353,8 @@ export function useWorkspaceCanvasNodeTypes({
           agentSessions={data.task.agentSessions ?? []}
           currentDirectory={currentDirectory}
           labelColor={labelColor}
+          isMaximized={maximizedNodeId === id}
+          onToggleMaximize={() => toggleMaximizeNodeRef.current(id)}
           position={nodePosition}
           width={data.width}
           height={data.height}
@@ -396,6 +413,7 @@ export function useWorkspaceCanvasNodeTypes({
           selectNode={selectNode}
           closeNodeRef={closeNodeRef}
           resizeNodeRef={resizeNodeRef}
+          toggleMaximizeNodeRef={toggleMaximizeNodeRef}
           normalizeViewportForTerminalInteractionRef={normalizeViewportForTerminalInteractionRef}
         />
       )
@@ -423,6 +441,7 @@ export function useWorkspaceCanvasNodeTypes({
             selectNode={selectNode}
             closeNodeRef={closeNodeRef}
             resizeNodeRef={resizeNodeRef}
+            toggleMaximizeNodeRef={toggleMaximizeNodeRef}
             copyAgentLastMessageRef={copyAgentLastMessageRef}
             updateNodeScrollbackRef={updateNodeScrollbackRef}
             normalizeViewportForTerminalInteractionRef={normalizeViewportForTerminalInteractionRef}
@@ -440,6 +459,7 @@ export function useWorkspaceCanvasNodeTypes({
             clearNodeSelectionRef={clearNodeSelectionRef}
             closeNodeRef={closeNodeRef}
             resizeNodeRef={resizeNodeRef}
+            toggleMaximizeNodeRef={toggleMaximizeNodeRef}
             updateNoteTextRef={updateNoteTextRef}
             normalizeViewportForTerminalInteractionRef={normalizeViewportForTerminalInteractionRef}
           />
@@ -447,10 +467,26 @@ export function useWorkspaceCanvasNodeTypes({
       },
       imageNode: ImageNodeType,
       taskNode: TaskNodeType,
+      pgViewerNode: ({ data, id }: { data: TerminalNodeData; id: string }) => {
+        const nodePosition = useNodePosition(id)
+        return (
+          <WorkspaceCanvasPgViewerNodeType
+            data={data}
+            id={id}
+            nodePosition={nodePosition}
+            selectNode={selectNode}
+            closeNodeRef={closeNodeRef}
+            resizeNodeRef={resizeNodeRef}
+            toggleMaximizeNodeRef={toggleMaximizeNodeRef}
+            normalizeViewportForTerminalInteractionRef={normalizeViewportForTerminalInteractionRef}
+          />
+        )
+      },
     }
   }, [
     clearNodeSelectionRef,
     closeNodeRef,
+    toggleMaximizeNodeRef,
     normalizeViewportForTerminalInteractionRef,
     selectNode,
     spacesRef,

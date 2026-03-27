@@ -64,6 +64,18 @@ import type {
   WriteWorkspaceStateRawInput,
   WriteTerminalInput,
   DeleteCanvasImageInput,
+  WhisperTranscribeInput,
+  WhisperTranscribeResult,
+  WhisperAuthResult,
+  WhisperHistoryInput,
+  WhisperHistoryResult,
+  PgConnectInput,
+  PgConnectResult,
+  PgDisconnectInput,
+  PgListTablesInput,
+  PgListTablesResult,
+  PgQueryInput,
+  PgQueryResult,
 } from '../../shared/contracts/dto'
 import { invokeIpc } from './ipcInvoke'
 
@@ -252,6 +264,28 @@ const opencoveApi = {
   task: {
     suggestTitle: (payload: SuggestTaskTitleInput): Promise<SuggestTaskTitleResult> =>
       invokeIpc(IPC_CHANNELS.taskSuggestTitle, payload),
+  },
+  whisper: {
+    transcribe: (payload: WhisperTranscribeInput): Promise<WhisperTranscribeResult> =>
+      invokeIpc(IPC_CHANNELS.whisperTranscribe, payload),
+    auth: (): Promise<WhisperAuthResult> =>
+      invokeIpc(IPC_CHANNELS.whisperAuth),
+    history: (payload: WhisperHistoryInput): Promise<WhisperHistoryResult> =>
+      invokeIpc(IPC_CHANNELS.whisperHistory, payload),
+  },
+  admin: {
+    llmProxy: (payload: { url: string; method: string; headers: Record<string, string>; body: string }): Promise<{ status: number; body: string }> =>
+      invokeIpc(IPC_CHANNELS.adminLlmProxy, payload),
+  },
+  pg: {
+    connect: (payload: PgConnectInput): Promise<PgConnectResult> =>
+      invokeIpc(IPC_CHANNELS.pgConnect, payload),
+    disconnect: (payload: PgDisconnectInput): Promise<void> =>
+      invokeIpc(IPC_CHANNELS.pgDisconnect, payload),
+    listTables: (payload: PgListTablesInput): Promise<PgListTablesResult> =>
+      invokeIpc(IPC_CHANNELS.pgListTables, payload),
+    query: (payload: PgQueryInput): Promise<PgQueryResult> =>
+      invokeIpc(IPC_CHANNELS.pgQuery, payload),
   },
 }
 

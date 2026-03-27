@@ -26,6 +26,7 @@ export interface WorkspaceCanvasActionRefs {
   updateNodeScrollbackRef: React.MutableRefObject<(nodeId: string, scrollback: string) => void>
   updateTerminalTitleRef: React.MutableRefObject<(nodeId: string, title: string) => void>
   renameTerminalTitleRef: React.MutableRefObject<(nodeId: string, title: string) => void>
+  toggleMaximizeNodeRef: React.MutableRefObject<(nodeId: string) => void>
   normalizeViewportForTerminalInteractionRef: React.MutableRefObject<(nodeId: string) => void>
 }
 
@@ -72,6 +73,9 @@ export function useWorkspaceCanvasActionRefs(): WorkspaceCanvasActionRefs {
   const renameTerminalTitleRef = useRef<(nodeId: string, title: string) => void>(
     (_nodeId: string, _title: string) => undefined,
   )
+  const toggleMaximizeNodeRef = useRef<(nodeId: string) => void>(
+    (_nodeId: string) => undefined,
+  )
   const normalizeViewportForTerminalInteractionRef = useRef<(nodeId: string) => void>(
     (_nodeId: string) => undefined,
   )
@@ -93,6 +97,7 @@ export function useWorkspaceCanvasActionRefs(): WorkspaceCanvasActionRefs {
     updateNodeScrollbackRef,
     updateTerminalTitleRef,
     renameTerminalTitleRef,
+    toggleMaximizeNodeRef,
     normalizeViewportForTerminalInteractionRef,
   }
 }
@@ -107,6 +112,7 @@ interface SyncActionRefsParams {
   updateNodeScrollback: (nodeId: string, scrollback: string) => void
   updateTerminalTitle: (nodeId: string, title: string) => void
   renameTerminalTitle: (nodeId: string, title: string) => void
+  toggleMaximizeNode: (nodeId: string) => void
   focusNodeOnClick: boolean
   focusNodeTargetZoom: number
   nodesRef: React.MutableRefObject<Node<TerminalNodeData>[]>
@@ -123,6 +129,7 @@ export function useWorkspaceCanvasSyncActionRefs({
   updateNodeScrollback,
   updateTerminalTitle,
   renameTerminalTitle,
+  toggleMaximizeNode,
   focusNodeOnClick,
   focusNodeTargetZoom,
   nodesRef,
@@ -167,6 +174,10 @@ export function useWorkspaceCanvasSyncActionRefs({
       renameTerminalTitle(nodeId, title)
     }
   }, [actionRefs.renameTerminalTitleRef, renameTerminalTitle])
+
+  useLayoutEffect(() => {
+    actionRefs.toggleMaximizeNodeRef.current = toggleMaximizeNode
+  }, [actionRefs.toggleMaximizeNodeRef, toggleMaximizeNode])
 
   useLayoutEffect(() => {
     actionRefs.normalizeViewportForTerminalInteractionRef.current = (nodeId: string) => {

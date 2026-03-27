@@ -37,6 +37,7 @@ interface WorkspaceContextMenuProps {
   closeContextMenu: () => void
   createTerminalNode: () => Promise<void>
   createNoteNodeFromContextMenu: () => void
+  createPgViewerNode: () => void
   openTaskCreator: () => void
   openAgentLauncher: () => void
   agentProviderOrder: AgentProvider[]
@@ -62,6 +63,7 @@ export function WorkspaceContextMenu({
   closeContextMenu,
   createTerminalNode,
   createNoteNodeFromContextMenu,
+  createPgViewerNode,
   openTaskCreator,
   openAgentLauncher,
   agentProviderOrder,
@@ -446,6 +448,7 @@ export function WorkspaceContextMenu({
           <WorkspaceContextPaneMenuContent
             createTerminalNode={createTerminalNode}
             createNoteNodeFromContextMenu={createNoteNodeFromContextMenu}
+            createPgViewerNode={createPgViewerNode}
             openTaskCreator={openTaskCreator}
             openAgentLauncher={openAgentLauncher}
             openAgentProviderSubmenu={openAgentProviderSubmenu}

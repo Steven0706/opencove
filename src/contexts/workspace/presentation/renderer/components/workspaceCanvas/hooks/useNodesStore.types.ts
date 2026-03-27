@@ -65,4 +65,8 @@ export interface UseWorkspaceCanvasNodesStoreResult {
     image: ImageNodeData,
     placement?: NodePlacementOptions,
   ) => Node<TerminalNodeData> | null
+  createPgViewerNode: (
+    anchor: Point,
+    placement?: NodePlacementOptions,
+  ) => Node<TerminalNodeData> | null
 }

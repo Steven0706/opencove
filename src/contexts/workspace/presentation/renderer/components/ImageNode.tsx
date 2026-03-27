@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { JSX } from 'react'
+import { Maximize2, Minimize2 } from 'lucide-react'
 import { useTranslation } from '@app/renderer/i18n'
 import type { CanvasImageMimeType } from '@shared/contracts/dto'
 import type { NodeFrame, Point } from '../types'
@@ -25,6 +26,8 @@ interface ImageNodeProps {
   onClose: () => void
   onResize: (frame: NodeFrame) => void
   onInteractionStart?: (options?: ImageNodeInteractionOptions) => void
+  isMaximized?: boolean
+  onToggleMaximize?: () => void
 }
 
 export function ImageNode({
@@ -39,6 +42,8 @@ export function ImageNode({
   onClose,
   onResize,
   onInteractionStart,
+  isMaximized,
+  onToggleMaximize,
 }: ImageNodeProps): JSX.Element {
   const { t } = useTranslation()
   const aspectRatio = useMemo(() => {
@@ -160,6 +165,21 @@ export function ImageNode({
           data-image-missing={isMissing ? 'true' : 'false'}
         />
       )}
+
+      {onToggleMaximize ? (
+        <button
+          type="button"
+          className="image-node__maximize nodrag"
+          onClick={event => {
+            event.stopPropagation()
+            onToggleMaximize()
+          }}
+          aria-label={isMaximized ? 'Restore' : 'Maximize'}
+          title={isMaximized ? 'Restore' : 'Maximize'}
+        >
+          {isMaximized ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+        </button>
+      ) : null}
 
       <button
         type="button"

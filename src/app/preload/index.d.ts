@@ -62,6 +62,18 @@ import type {
   WriteWorkspaceStateRawInput,
   WriteTerminalInput,
   DeleteCanvasImageInput,
+  WhisperTranscribeInput,
+  WhisperTranscribeResult,
+  WhisperAuthResult,
+  WhisperHistoryInput,
+  WhisperHistoryResult,
+  PgConnectInput,
+  PgConnectResult,
+  PgDisconnectInput,
+  PgListTablesInput,
+  PgListTablesResult,
+  PgQueryInput,
+  PgQueryResult,
 } from '../../shared/contracts/dto'
 
 type UnsubscribeFn = () => void
@@ -154,6 +166,20 @@ export interface OpenCoveApi {
   }
   task: {
     suggestTitle: (payload: SuggestTaskTitleInput) => Promise<SuggestTaskTitleResult>
+  }
+  whisper: {
+    transcribe: (payload: WhisperTranscribeInput) => Promise<WhisperTranscribeResult>
+    auth: () => Promise<WhisperAuthResult>
+    history: (payload: WhisperHistoryInput) => Promise<WhisperHistoryResult>
+  }
+  admin: {
+    llmProxy: (payload: { url: string; method: string; headers: Record<string, string>; body: string }) => Promise<{ status: number; body: string }>
+  }
+  pg: {
+    connect: (payload: PgConnectInput) => Promise<PgConnectResult>
+    disconnect: (payload: PgDisconnectInput) => Promise<void>
+    listTables: (payload: PgListTablesInput) => Promise<PgListTablesResult>
+    query: (payload: PgQueryInput) => Promise<PgQueryResult>
   }
 }
 

@@ -26,3 +26,6 @@
 @import './styles/app-notifications.css';
 @import './styles/whats-new.css';
 @import './styles/space-archives-window.css';
+@import './styles/whisper-widget.css';
+@import './styles/admin-panel.css';
+@import './styles/pg-viewer-node.css';

@@ -65,6 +65,8 @@ export function TerminalNode({
   onTitleCommit,
   onCommandRun,
   onInteractionStart,
+  isMaximized,
+  onToggleMaximize,
 }: TerminalNodeProps): JSX.Element {
   const isDragSurfaceSelectionMode = useStore(selectDragSurfaceSelectionMode)
   const isViewportInteractionActive = useStore(selectViewportInteractionActive)
@@ -484,6 +486,8 @@ export function TerminalNode({
       onTitleCommit={onTitleCommit}
       onClose={onClose}
       onCopyLastMessage={onCopyLastMessage}
+      isMaximized={isMaximized}
+      onToggleMaximize={onToggleMaximize}
       find={findState}
       onFindQueryChange={setFindQuery}
       onFindNext={findNextMatch}

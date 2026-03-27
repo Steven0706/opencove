@@ -61,6 +61,13 @@ function createMessageMap(): Record<AppErrorCode, string> {
     'update.download_failed': 'Unable to download the update.',
     'update.install_failed': 'Unable to install the update.',
     'release_notes.get_current_failed': 'Unable to load release notes.',
+    'whisper.transcribe_failed': 'Unable to transcribe audio.',
+    'whisper.auth_failed': 'Unable to authenticate with Whisper API.',
+    'whisper.history_failed': 'Unable to fetch transcription history.',
+    'pg.connect_failed': 'Unable to connect to the database.',
+    'pg.disconnect_failed': 'Unable to disconnect from the database.',
+    'pg.list_tables_failed': 'Unable to list database tables.',
+    'pg.query_failed': 'Unable to execute the query.',
   }
 }
 

@@ -76,7 +76,9 @@ export function toPersistedState(
             ? node.data.note
             : node.data.kind === 'image'
               ? node.data.image
-              : node.data.task,
+              : node.data.kind === 'pgViewer'
+                ? node.data.pgViewer
+                : node.data.task,
       })),
     })),
     settings,

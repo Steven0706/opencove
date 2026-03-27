@@ -422,7 +422,7 @@ export function useWorkspaceCanvasNodesStore({
     },
     [onRequestPersistFlush, setNodes],
   )
-  const { createNodeForSession, createNoteNode, createTaskNode, createImageNode } =
+  const { createNodeForSession, createNoteNode, createTaskNode, createImageNode, createPgViewerNode } =
     useWorkspaceCanvasNodeCreation({
       nodesRef,
       spacesRef,
@@ -455,5 +455,6 @@ export function useWorkspaceCanvasNodesStore({
     createNoteNode,
     createTaskNode,
     createImageNode,
+    createPgViewerNode,
   }
 }

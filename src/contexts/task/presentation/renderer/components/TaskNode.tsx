@@ -1,5 +1,5 @@
 import { Handle, Position } from '@xyflow/react'
-import { FileText, Pencil } from 'lucide-react'
+import { FileText, Maximize2, Minimize2, Pencil } from 'lucide-react'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import type { JSX } from 'react'
 import { useTranslation } from '@app/renderer/i18n'
@@ -58,6 +58,8 @@ interface TaskNodeProps {
   onResumeAgentSession: (recordId: string) => void
   onRemoveAgentSessionRecord: (recordId: string) => void
   onInteractionStart?: (options?: TaskNodeInteractionOptions) => void
+  isMaximized?: boolean
+  onToggleMaximize?: () => void
 }
 
 export function TaskNode({
@@ -84,6 +86,8 @@ export function TaskNode({
   onResumeAgentSession,
   onRemoveAgentSessionRecord,
   onInteractionStart,
+  isMaximized,
+  onToggleMaximize,
 }: TaskNodeProps): JSX.Element {
   const { t } = useTranslation()
   const workspaceId = useAppStore(state => state.activeWorkspaceId)
@@ -149,9 +153,17 @@ export function TaskNode({
       return
     }
 
-    event.stopPropagation()
-    setIsTitleEditing(true)
-  }, [])
+    if (event.target.closest('.task-node__title-row')) {
+      event.stopPropagation()
+      setIsTitleEditing(true)
+      return
+    }
+
+    if (onToggleMaximize) {
+      event.stopPropagation()
+      onToggleMaximize()
+    }
+  }, [onToggleMaximize])
 
   const commitRequirementDraft = useCallback(() => {
     const normalized = requirementDraft.trim()
@@ -341,6 +353,22 @@ export function TaskNode({
           >
             <Pencil size={14} strokeWidth={2.2} />
           </button>
+
+          {onToggleMaximize ? (
+            <button
+              type="button"
+              className="task-node__icon-button task-node__icon-button--maximize nodrag"
+              data-testid="task-node-maximize"
+              onClick={event => {
+                event.stopPropagation()
+                onToggleMaximize()
+              }}
+              aria-label={isMaximized ? 'Restore' : 'Maximize'}
+              title={isMaximized ? 'Restore' : 'Maximize'}
+            >
+              {isMaximized ? <Minimize2 size={14} strokeWidth={2.2} /> : <Maximize2 size={14} strokeWidth={2.2} />}
+            </button>
+          ) : null}
 
           <button
             type="button"

@@ -10,7 +10,7 @@ import type {
 
 export type { AgentRuntimeStatus } from '@contexts/agent/domain/types'
 
-export type WorkspaceNodeKind = 'terminal' | 'agent' | 'task' | 'note' | 'image'
+export type WorkspaceNodeKind = 'terminal' | 'agent' | 'task' | 'note' | 'image' | 'pgViewer'
 
 export type TaskRuntimeStatus = 'todo' | 'doing' | 'ai_done' | 'done'
 
@@ -79,6 +79,16 @@ export interface ImageNodeData {
   naturalHeight: number | null
 }
 
+export interface PgViewerNodeData {
+  connectionId: string | null
+  host: string
+  port: number
+  database: string
+  user: string
+  isConnected: boolean
+  activeTable: string | null
+}
+
 export interface TerminalNodeData {
   [key: string]: unknown
   sessionId: string
@@ -102,6 +112,7 @@ export interface TerminalNodeData {
   task: TaskNodeData | null
   note: NoteNodeData | null
   image: ImageNodeData | null
+  pgViewer: PgViewerNodeData | null
 }
 
 export interface WorkspaceState {
@@ -262,7 +273,7 @@ export interface PersistedTerminalNode {
   executionDirectory?: string | null
   expectedDirectory?: string | null
   agent: AgentNodeData | null
-  task: TaskNodeData | NoteNodeData | ImageNodeData | null
+  task: TaskNodeData | NoteNodeData | ImageNodeData | PgViewerNodeData | null
 }
 
 export interface PersistedAppState {

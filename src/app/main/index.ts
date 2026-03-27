@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, nativeImage } from 'electron'
+import { app, shell, BrowserWindow, nativeImage, session } from 'electron'
 import { isAbsolute, join, relative, resolve, sep } from 'path'
 import { fileURLToPath } from 'url'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
@@ -263,6 +263,15 @@ function createWindow(): void {
       sandbox: !disableRendererSandboxForTests,
       ...(keepRendererActiveInBackground ? { backgroundThrottling: false } : {}),
     },
+  })
+
+  // Grant microphone permission for Whisper voice input
+  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
+    if (permission === 'media') {
+      callback(true)
+      return
+    }
+    callback(true)
   })
 
   const showWindow = (): void => {

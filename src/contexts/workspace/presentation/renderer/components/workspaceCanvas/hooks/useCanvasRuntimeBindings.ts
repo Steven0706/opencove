@@ -1,6 +1,8 @@
+import { useCallback } from 'react'
 import { useWorkspaceCanvasAgentLastMessageCopy } from './useAgentLastMessageToNote'
 import { useWorkspaceCanvasSyncActionRefs, type WorkspaceCanvasActionRefs } from './useActionRefs'
 import { useWorkspaceCanvasPtyTaskCompletion } from './usePtyTaskCompletion'
+import { maximizeNode } from '../../../utils/nodeMaximize'
 
 export function useWorkspaceCanvasRuntimeBindings({
   setNodes,
@@ -46,6 +48,13 @@ export function useWorkspaceCanvasRuntimeBindings({
     onShowMessage,
   })
 
+  const toggleMaximizeNode = useCallback(
+    (nodeId: string) => {
+      maximizeNode(reactFlow, nodeId, setNodes)
+    },
+    [reactFlow, setNodes],
+  )
+
   useWorkspaceCanvasSyncActionRefs({
     actionRefs,
     clearNodeSelection,
@@ -56,6 +65,7 @@ export function useWorkspaceCanvasRuntimeBindings({
     updateNodeScrollback,
     updateTerminalTitle,
     renameTerminalTitle,
+    toggleMaximizeNode,
     focusNodeOnClick,
     focusNodeTargetZoom,
     nodesRef,

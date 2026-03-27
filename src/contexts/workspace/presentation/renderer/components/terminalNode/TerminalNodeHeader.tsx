@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState, type JSX } from 'react'
 import { useTranslation } from '@app/renderer/i18n'
-import { Copy, LoaderCircle } from 'lucide-react'
+import { Copy, LoaderCircle, Maximize2, Minimize2 } from 'lucide-react'
 import type { AgentRuntimeStatus, WorkspaceNodeKind } from '../../types'
 import type { LabelColor } from '@shared/types/labelColor'
 import { getStatusClassName } from './status'
@@ -14,6 +14,8 @@ interface TerminalNodeHeaderProps {
   onTitleCommit?: (title: string) => void
   onClose: () => void
   onCopyLastMessage?: () => Promise<void>
+  isMaximized?: boolean
+  onToggleMaximize?: () => void
 }
 
 export function TerminalNodeHeader({
@@ -25,6 +27,8 @@ export function TerminalNodeHeader({
   onTitleCommit,
   onClose,
   onCopyLastMessage,
+  isMaximized,
+  onToggleMaximize,
 }: TerminalNodeHeaderProps): JSX.Element {
   const { t } = useTranslation()
   const [isTitleEditing, setIsTitleEditing] = useState(false)
@@ -69,20 +73,22 @@ export function TerminalNodeHeader({
 
   const handleHeaderClick = useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
-      if (
-        event.detail !== 2 ||
-        !isTitleEditable ||
-        isTitleEditing ||
-        !(event.target instanceof Element) ||
-        event.target.closest('.nodrag')
-      ) {
+      if (event.detail !== 2 || !(event.target instanceof Element) || event.target.closest('.nodrag')) {
         return
       }
 
-      event.stopPropagation()
-      setIsTitleEditing(true)
+      if (isTitleEditable && !isTitleEditing) {
+        event.stopPropagation()
+        setIsTitleEditing(true)
+        return
+      }
+
+      if (onToggleMaximize) {
+        event.stopPropagation()
+        onToggleMaximize()
+      }
     },
-    [isTitleEditable, isTitleEditing],
+    [isTitleEditable, isTitleEditing, onToggleMaximize],
   )
 
   const statusLabel = (() => {
@@ -213,6 +219,25 @@ export function TerminalNodeHeader({
             <LoaderCircle className="terminal-node__action-icon terminal-node__action-icon--spinning" />
           ) : (
             <Copy className="terminal-node__action-icon" />
+          )}
+        </button>
+      ) : null}
+
+      {onToggleMaximize ? (
+        <button
+          type="button"
+          className="terminal-node__action terminal-node__action--icon nodrag"
+          aria-label={isMaximized ? 'Restore' : 'Maximize'}
+          title={isMaximized ? 'Restore' : 'Maximize'}
+          onClick={event => {
+            event.stopPropagation()
+            onToggleMaximize()
+          }}
+        >
+          {isMaximized ? (
+            <Minimize2 className="terminal-node__action-icon" />
+          ) : (
+            <Maximize2 className="terminal-node__action-icon" />
           )}
         </button>
       ) : null}

@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import type { JSX } from 'react'
+import { Maximize2, Minimize2 } from 'lucide-react'
 import { useTranslation } from '@app/renderer/i18n'
 import type { NodeFrame, Point } from '../types'
 import type { LabelColor } from '@shared/types/labelColor'
@@ -25,6 +26,8 @@ interface NoteNodeProps {
   onResize: (frame: NodeFrame) => void
   onTextChange: (text: string) => void
   onInteractionStart?: (options?: NoteNodeInteractionOptions) => void
+  isMaximized?: boolean
+  onToggleMaximize?: () => void
 }
 
 export function NoteNode({
@@ -37,6 +40,8 @@ export function NoteNode({
   onResize,
   onTextChange,
   onInteractionStart,
+  isMaximized,
+  onToggleMaximize,
 }: NoteNodeProps): JSX.Element {
   const { t } = useTranslation()
   const { draftFrame, handleResizePointerDown } = useNodeFrameResize({
@@ -103,7 +108,15 @@ export function NoteNode({
         }
       }}
     >
-      <div className="note-node__header" data-node-drag-handle="true">
+      <div
+        className="note-node__header"
+        data-node-drag-handle="true"
+        onDoubleClick={event => {
+          if (!(event.target instanceof Element) || event.target.closest('.nodrag')) return
+          event.stopPropagation()
+          onToggleMaximize?.()
+        }}
+      >
         {labelColor ? (
           <span
             className="cove-label-dot cove-label-dot--solid"
@@ -114,6 +127,20 @@ export function NoteNode({
         <span className="note-node__title" data-testid="note-node-title">
           {t('noteNode.title')}
         </span>
+        {onToggleMaximize ? (
+          <button
+            type="button"
+            className="note-node__maximize nodrag"
+            aria-label={isMaximized ? 'Restore' : 'Maximize'}
+            title={isMaximized ? 'Restore' : 'Maximize'}
+            onClick={event => {
+              event.stopPropagation()
+              onToggleMaximize()
+            }}
+          >
+            {isMaximized ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+          </button>
+        ) : null}
         <button
           type="button"
           className="note-node__close nodrag"

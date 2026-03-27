@@ -3,6 +3,7 @@ import {
   ArrowRight,
   Check,
   ChevronRight,
+  Database,
   FileText,
   Group,
   LayoutGrid,
@@ -30,6 +31,7 @@ function renderMark(checked: boolean): React.JSX.Element {
 export function WorkspaceContextPaneMenuContent({
   createTerminalNode,
   createNoteNodeFromContextMenu,
+  createPgViewerNode,
   openTaskCreator,
   openAgentLauncher,
   openAgentProviderSubmenu,
@@ -46,6 +48,7 @@ export function WorkspaceContextPaneMenuContent({
 }: {
   createTerminalNode: () => Promise<void>
   createNoteNodeFromContextMenu: () => void
+  createPgViewerNode: () => void
   openTaskCreator: () => void
   openAgentLauncher: () => void
   openAgentProviderSubmenu: () => void
@@ -95,6 +98,16 @@ export function WorkspaceContextPaneMenuContent({
       >
         <ListTodo className="workspace-context-menu__icon" aria-hidden="true" />
         <span className="workspace-context-menu__label">{t('workspaceContextMenu.newTask')}</span>
+      </button>
+      <button
+        type="button"
+        data-testid="workspace-context-new-database"
+        onClick={() => {
+          createPgViewerNode()
+        }}
+      >
+        <Database className="workspace-context-menu__icon" aria-hidden="true" />
+        <span className="workspace-context-menu__label">New Database</span>
       </button>
 
       <div className="workspace-context-menu__split">
