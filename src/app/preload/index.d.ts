@@ -174,6 +174,9 @@ export interface OpenCoveApi {
   }
   admin: {
     llmProxy: (payload: { url: string; method: string; headers: Record<string, string>; body: string }) => Promise<{ status: number; body: string }>
+    saveProjectFile: (payload: { workspacePath: string; filename: string; content: string; purpose: string }) => Promise<{ success: boolean; path: string }>
+    listProjectFiles: (payload: { workspacePath: string }) => Promise<{ files: Array<{ filename: string; purpose: string; path: string }> }>
+    readProjectFile: (payload: { workspacePath: string; filename: string }) => Promise<{ content: string }>
   }
   pg: {
     connect: (payload: PgConnectInput) => Promise<PgConnectResult>

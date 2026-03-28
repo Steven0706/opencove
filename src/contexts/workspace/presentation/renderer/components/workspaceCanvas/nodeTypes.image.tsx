@@ -35,6 +35,7 @@ export function WorkspaceCanvasImageNodeType({
       fileName={data.image.fileName}
       naturalWidth={data.image.naturalWidth}
       naturalHeight={data.image.naturalHeight}
+      nodeNumber={data.nodeNumber}
       isMaximized={maximizedNodeId === id}
       onToggleMaximize={() => toggleMaximizeNodeRef.current(id)}
       position={nodePosition}

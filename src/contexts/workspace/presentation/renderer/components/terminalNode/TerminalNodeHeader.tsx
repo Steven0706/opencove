@@ -10,6 +10,8 @@ interface TerminalNodeHeaderProps {
   kind: WorkspaceNodeKind
   status: AgentRuntimeStatus | null
   labelColor?: LabelColor | null
+  nodeNumber?: number
+  description?: string
   directoryMismatch?: { executionDirectory: string; expectedDirectory: string } | null
   onTitleCommit?: (title: string) => void
   onClose: () => void
@@ -23,6 +25,8 @@ export function TerminalNodeHeader({
   kind,
   status,
   labelColor,
+  nodeNumber,
+  description,
   directoryMismatch,
   onTitleCommit,
   onClose,
@@ -118,6 +122,9 @@ export function TerminalNodeHeader({
           aria-hidden="true"
         />
       ) : null}
+      {nodeNumber != null ? (
+        <span className="terminal-node__number">#{nodeNumber}</span>
+      ) : null}
       {isTitleEditable ? (
         isTitleEditing ? (
           <>
@@ -165,6 +172,9 @@ export function TerminalNodeHeader({
         )
       ) : (
         <span className="terminal-node__title">{title}</span>
+      )}
+      {description && (
+        <span className="terminal-node__description">{description}</span>
       )}
 
       {directoryMismatch || isAgentNode ? (

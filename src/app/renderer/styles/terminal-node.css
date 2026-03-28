@@ -393,6 +393,23 @@
   background: rgba(40, 12, 18, 0.45);
 }
 
+.terminal-node__number {
+  font-size: 10px;
+  color: var(--cove-text-faint);
+  font-weight: 600;
+  margin-right: 4px;
+  opacity: 0.6;
+}
+
+.terminal-node__description {
+  font-size: 10px;
+  color: var(--cove-text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
 @keyframes terminal-node-spin {
   from {
     transform: rotate(0deg);

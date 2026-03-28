@@ -13,6 +13,8 @@ export interface TerminalNodeProps {
   sessionId: string
   title: string
   kind: WorkspaceNodeKind
+  nodeNumber?: number
+  description?: string
   labelColor?: LabelColor | null
   terminalThemeMode?: TerminalThemeMode
   isSelected?: boolean

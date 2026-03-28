@@ -20,6 +20,7 @@ interface ImageNodeProps {
   fileName: string | null
   naturalWidth: number | null
   naturalHeight: number | null
+  nodeNumber?: number
   position: Point
   width: number
   height: number
@@ -36,6 +37,7 @@ export function ImageNode({
   fileName,
   naturalWidth,
   naturalHeight,
+  nodeNumber,
   position,
   width,
   height,
@@ -165,6 +167,10 @@ export function ImageNode({
           data-image-missing={isMissing ? 'true' : 'false'}
         />
       )}
+
+      {nodeNumber != null ? (
+        <span className="image-node__number">#{nodeNumber}</span>
+      ) : null}
 
       {onToggleMaximize ? (
         <button

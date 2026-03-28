@@ -23,6 +23,13 @@ import {
   resolveDefaultTerminalWindowSize,
 } from '../constants'
 import type { CreateNodeInput, NodePlacementOptions, ShowWorkspaceCanvasMessage } from '../types'
+
+function getNextNodeNumber(nodes: Node<TerminalNodeData>[]): number {
+  const used = nodes.map(n => n.data.nodeNumber ?? 0)
+  let num = 10
+  while (used.includes(num)) num++
+  return num
+}
 import type {
   CreateNoteNodeOptions,
   UseWorkspaceCanvasNodesStoreResult,
@@ -93,6 +100,7 @@ export function useWorkspaceCanvasNodeCreation({
       }
 
       const now = new Date().toISOString()
+      const nextNodeNumber = getNextNodeNumber(nodesRef.current)
       const normalizedExecutionDirectory =
         kind === 'agent'
           ? (agent?.executionDirectory ?? null)
@@ -115,6 +123,7 @@ export function useWorkspaceCanvasNodeCreation({
           width: defaultSize.width,
           height: defaultSize.height,
           kind,
+          nodeNumber: nextNodeNumber,
           status:
             kind === 'agent'
               ? agent?.launchMode === 'resume'
@@ -222,6 +231,7 @@ export function useWorkspaceCanvasNodeCreation({
       }
 
       const now = new Date().toISOString()
+      const nextNodeNumber = getNextNodeNumber(nodesRef.current)
 
       const nextNode: Node<TerminalNodeData> = {
         id: crypto.randomUUID(),
@@ -234,6 +244,7 @@ export function useWorkspaceCanvasNodeCreation({
           width: noteSize.width,
           height: noteSize.height,
           kind: 'note',
+          nodeNumber: nextNodeNumber,
           status: null,
           startedAt: now,
           endedAt: null,
@@ -302,6 +313,7 @@ export function useWorkspaceCanvasNodeCreation({
       }
 
       const now = new Date().toISOString()
+      const nextNodeNumber = getNextNodeNumber(nodesRef.current)
 
       const nextNode: Node<TerminalNodeData> = {
         id: crypto.randomUUID(),
@@ -314,6 +326,7 @@ export function useWorkspaceCanvasNodeCreation({
           width: defaultTaskSize.width,
           height: defaultTaskSize.height,
           kind: 'task',
+          nodeNumber: nextNodeNumber,
           status: null,
           startedAt: null,
           endedAt: null,
@@ -386,6 +399,8 @@ export function useWorkspaceCanvasNodeCreation({
         return null
       }
 
+      const nextNodeNumber = getNextNodeNumber(nodesRef.current)
+
       const nextNode: Node<TerminalNodeData> = {
         id: crypto.randomUUID(),
         type: 'imageNode',
@@ -397,6 +412,7 @@ export function useWorkspaceCanvasNodeCreation({
           width: desiredSize.width,
           height: desiredSize.height,
           kind: 'image',
+          nodeNumber: nextNodeNumber,
           status: null,
           startedAt: null,
           endedAt: null,
@@ -445,6 +461,8 @@ export function useWorkspaceCanvasNodeCreation({
         return null
       }
 
+      const nextNodeNumber = getNextNodeNumber(nodesRef.current)
+
       const nextNode: Node<TerminalNodeData> = {
         id: crypto.randomUUID(),
         type: 'pgViewerNode',
@@ -456,6 +474,7 @@ export function useWorkspaceCanvasNodeCreation({
           width: pgViewerSize.width,
           height: pgViewerSize.height,
           kind: 'pgViewer',
+          nodeNumber: nextNodeNumber,
           status: null,
           startedAt: null,
           endedAt: null,

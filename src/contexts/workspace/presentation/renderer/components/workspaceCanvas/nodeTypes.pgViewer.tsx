@@ -37,6 +37,7 @@ export function WorkspaceCanvasPgViewerNodeType({
       isConnected={data.pgViewer.isConnected}
       connectionId={data.pgViewer.connectionId}
       activeTable={data.pgViewer.activeTable}
+      nodeNumber={data.nodeNumber}
       isMaximized={maximizedNodeId === id}
       onToggleMaximize={() => toggleMaximizeNodeRef.current(id)}
       position={nodePosition}

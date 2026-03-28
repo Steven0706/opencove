@@ -81,6 +81,8 @@ function TerminalNodeType({
       sessionId={data.sessionId}
       title={data.title}
       kind={data.kind}
+      nodeNumber={data.nodeNumber}
+      description={data.description}
       labelColor={labelColor}
       isMaximized={maximizedNodeId === id}
       onToggleMaximize={() => toggleMaximizeNodeRef.current(id)}
@@ -194,6 +196,7 @@ function NoteNodeType({
   return (
     <NoteNode
       text={data.note.text}
+      nodeNumber={data.nodeNumber}
       labelColor={labelColor}
       isMaximized={maximizedNodeId === id}
       onToggleMaximize={() => toggleMaximizeNodeRef.current(id)}
@@ -344,6 +347,7 @@ export function useWorkspaceCanvasNodeTypes({
       return (
         <TaskNode
           title={data.title}
+          nodeNumber={data.nodeNumber}
           requirement={data.task.requirement}
           status={data.task.status}
           priority={data.task.priority}

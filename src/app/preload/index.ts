@@ -276,6 +276,12 @@ const opencoveApi = {
   admin: {
     llmProxy: (payload: { url: string; method: string; headers: Record<string, string>; body: string }): Promise<{ status: number; body: string }> =>
       invokeIpc(IPC_CHANNELS.adminLlmProxy, payload),
+    saveProjectFile: (payload: { workspacePath: string; filename: string; content: string; purpose: string }): Promise<{ success: boolean; path: string }> =>
+      invokeIpc(IPC_CHANNELS.adminSaveProjectFile, payload),
+    listProjectFiles: (payload: { workspacePath: string }): Promise<{ files: Array<{ filename: string; purpose: string; path: string }> }> =>
+      invokeIpc(IPC_CHANNELS.adminListProjectFiles, payload),
+    readProjectFile: (payload: { workspacePath: string; filename: string }): Promise<{ content: string }> =>
+      invokeIpc(IPC_CHANNELS.adminReadProjectFile, payload),
   },
   pg: {
     connect: (payload: PgConnectInput): Promise<PgConnectResult> =>

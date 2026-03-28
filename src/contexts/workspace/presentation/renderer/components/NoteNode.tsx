@@ -18,6 +18,7 @@ interface NoteNodeInteractionOptions {
 
 interface NoteNodeProps {
   text: string
+  nodeNumber?: number
   labelColor?: LabelColor | null
   position: Point
   width: number
@@ -32,6 +33,7 @@ interface NoteNodeProps {
 
 export function NoteNode({
   text,
+  nodeNumber,
   labelColor,
   position,
   width,
@@ -123,6 +125,9 @@ export function NoteNode({
             data-cove-label-color={labelColor}
             aria-hidden="true"
           />
+        ) : null}
+        {nodeNumber != null ? (
+          <span className="note-node__number">#{nodeNumber}</span>
         ) : null}
         <span className="note-node__title" data-testid="note-node-title">
           {t('noteNode.title')}

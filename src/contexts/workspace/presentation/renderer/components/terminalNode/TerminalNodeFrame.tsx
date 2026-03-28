@@ -16,6 +16,8 @@ interface TerminalNodeFrameProps {
   title: string
   kind: WorkspaceNodeKind
   labelColor?: LabelColor | null
+  nodeNumber?: number
+  description?: string
   terminalThemeMode: TerminalThemeMode
   isSelected: boolean
   isDragging: boolean
@@ -53,6 +55,8 @@ export function TerminalNodeFrame({
   title,
   kind,
   labelColor,
+  nodeNumber,
+  description,
   terminalThemeMode,
   isSelected,
   isDragging,
@@ -149,6 +153,8 @@ export function TerminalNodeFrame({
         kind={kind}
         status={status}
         labelColor={labelColor ?? null}
+        nodeNumber={nodeNumber}
+        description={description}
         directoryMismatch={directoryMismatch}
         onTitleCommit={onTitleCommit}
         onClose={onClose}

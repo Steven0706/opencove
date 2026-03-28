@@ -336,3 +336,11 @@
 .pg-viewer-node__results-table tr:hover td {
   background: rgba(153, 223, 255, 0.04);
 }
+
+.pg-viewer-node__number {
+  font-size: 10px;
+  color: var(--cove-text-faint);
+  font-weight: 600;
+  margin-right: 4px;
+  opacity: 0.6;
+}

@@ -178,3 +178,17 @@
   bottom: 0;
   cursor: nwse-resize;
 }
+
+.image-node__number {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-size: 10px;
+  color: #fff;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 4px;
+  padding: 1px 5px;
+  pointer-events: none;
+  z-index: 5;
+}

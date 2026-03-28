@@ -46,6 +46,8 @@ export function TerminalNode({
   sessionId,
   title,
   kind,
+  nodeNumber,
+  description,
   labelColor,
   terminalThemeMode = 'sync-with-ui',
   isSelected = false,
@@ -468,6 +470,8 @@ export function TerminalNode({
       title={title}
       kind={kind}
       labelColor={labelColor}
+      nodeNumber={nodeNumber}
+      description={description}
       terminalThemeMode={terminalThemeMode}
       isSelected={hasSelectedDragSurface}
       isDragging={isDragging}

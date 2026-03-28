@@ -30,6 +30,7 @@ interface TaskNodeInteractionOptions {
 
 interface TaskNodeProps {
   title: string
+  nodeNumber?: number
   requirement: string
   status: TaskRuntimeStatus
   priority: TaskPriority
@@ -64,6 +65,7 @@ interface TaskNodeProps {
 
 export function TaskNode({
   title,
+  nodeNumber,
   requirement,
   status,
   priority,
@@ -266,6 +268,9 @@ export function TaskNode({
                 data-cove-label-color={labelColor}
                 aria-hidden="true"
               />
+            ) : null}
+            {nodeNumber != null ? (
+              <span className="task-node__number">#{nodeNumber}</span>
             ) : null}
 
             {isTitleEditing ? (

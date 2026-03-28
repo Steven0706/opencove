@@ -93,4 +93,61 @@ export const OPENCOVE_TOOLS: Anthropic.Tool[] = [
       required: ['profile', 'task'],
     },
   },
+  {
+    name: 'rename_node',
+    description: 'Rename a node by its number. Example: rename_node(12, "Frontend Builder")',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        nodeNumber: { type: 'number', description: 'The node number (e.g., 12)' },
+        title: { type: 'string', description: 'New title' },
+      },
+      required: ['nodeNumber', 'title'],
+    },
+  },
+  {
+    name: 'set_node_description',
+    description: 'Set a short description for a node by its number',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        nodeNumber: { type: 'number', description: 'The node number' },
+        description: { type: 'string', description: "Short description of this node's purpose" },
+      },
+      required: ['nodeNumber', 'description'],
+    },
+  },
+  {
+    name: 'save_project_file',
+    description: 'Save content as a markdown file in the project .opencove/ directory and register it',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        filename: { type: 'string', description: 'File name (e.g., "reviewer-feedback.md")' },
+        content: { type: 'string', description: 'File content (markdown)' },
+        purpose: { type: 'string', description: 'What this file is for (e.g., "Code review feedback from Reviewer agent")' },
+      },
+      required: ['filename', 'content', 'purpose'],
+    },
+  },
+  {
+    name: 'list_project_files',
+    description: 'List all saved project files with their purposes',
+    input_schema: {
+      type: 'object' as const,
+      properties: {},
+      required: [],
+    },
+  },
+  {
+    name: 'read_project_file',
+    description: 'Read the content of a saved project file',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        filename: { type: 'string', description: 'File name to read' },
+      },
+      required: ['filename'],
+    },
+  },
 ]

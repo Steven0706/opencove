@@ -448,6 +448,23 @@ export function WorkspaceCanvasInner({
         )
       }
     }
+    adminBridge.updateNodeTitle = (nodeId: string, title: string) => {
+      nodeStore.setNodes(prevNodes =>
+        prevNodes.map(n =>
+          n.id === nodeId ? { ...n, data: { ...n.data, title, titlePinnedByUser: true } } : n,
+        ),
+      )
+      onRequestPersistFlush?.()
+    }
+    adminBridge.updateNodeDescription = (nodeId: string, description: string) => {
+      nodeStore.setNodes(prevNodes =>
+        prevNodes.map(n =>
+          n.id === nodeId ? { ...n, data: { ...n.data, description } } : n,
+        ),
+      )
+      onRequestPersistFlush?.()
+    }
+    adminBridge.workspacePath = workspacePath
     return () => {
       adminBridge.getNodes = undefined
       adminBridge.createTerminalNode = undefined
@@ -455,6 +472,9 @@ export function WorkspaceCanvasInner({
       adminBridge.closeNode = undefined
       adminBridge.toggleMaximizeNode = undefined
       adminBridge.focusNode = undefined
+      adminBridge.updateNodeTitle = undefined
+      adminBridge.updateNodeDescription = undefined
+      adminBridge.workspacePath = undefined
     }
   }, [
     reactFlow,
@@ -469,6 +489,7 @@ export function WorkspaceCanvasInner({
     agentSettings.defaultTerminalProfileId,
     agentSettings.standardWindowSizeBucket,
     onSpacesChange,
+    onRequestPersistFlush,
   ])
   return (
     <WorkspaceCanvasView

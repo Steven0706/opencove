@@ -490,3 +490,11 @@
   justify-content: flex-end;
   gap: 8px;
 }
+
+.task-node__number {
+  font-size: 10px;
+  color: var(--cove-text-faint);
+  font-weight: 600;
+  margin-right: 4px;
+  opacity: 0.6;
+}

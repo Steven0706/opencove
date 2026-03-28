@@ -11,6 +11,9 @@ export interface AdminBridge {
   closeNode?: (nodeId: string) => Promise<void>
   toggleMaximizeNode?: (nodeId: string) => void
   focusNode?: (nodeId: string) => void
+  updateNodeTitle?: (nodeId: string, title: string) => void
+  updateNodeDescription?: (nodeId: string, description: string) => void
+  workspacePath?: string
 }
 
 export const adminBridge: AdminBridge = {}

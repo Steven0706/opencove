@@ -87,7 +87,9 @@ export function AdminPanel({ onClose }: AdminPanelProps): JSX.Element {
         case 'list_nodes': {
           const nodes = adminBridge.getNodes?.() ?? reactFlow.getNodes()
           return JSON.stringify(nodes.map(n => ({
+            number: n.data.nodeNumber ?? '?',
             id: n.id, kind: n.data.kind, title: n.data.title,
+            description: n.data.description ?? '',
             position: { x: Math.round(n.position.x), y: Math.round(n.position.y) },
             width: n.data.width, height: n.data.height,
             sessionId: n.data.sessionId, status: n.data.status,
@@ -137,6 +139,58 @@ export function AdminPanel({ onClose }: AdminPanelProps): JSX.Element {
           const escaped = prompt.replace(/'/g, "'\\''")
           await window.opencoveApi.pty.write({ sessionId: node.data.sessionId, data: `claude -p '${escaped}'\n` })
           return JSON.stringify({ success: true, nodeId, profile: profile.name, emoji: profile.emoji })
+        }
+        case 'rename_node': {
+          const num = toolInput.nodeNumber as number
+          const title = toolInput.title as string
+          const nodes = adminBridge.getNodes?.() ?? reactFlow.getNodes()
+          const node = nodes.find(n => n.data.nodeNumber === num)
+          if (!node) return JSON.stringify({ error: `Node #${num} not found` })
+          if (adminBridge.updateNodeTitle) {
+            adminBridge.updateNodeTitle(node.id, title)
+            return JSON.stringify({ success: true, nodeId: node.id })
+          }
+          return JSON.stringify({ error: 'Not available' })
+        }
+        case 'set_node_description': {
+          const num = toolInput.nodeNumber as number
+          const desc = toolInput.description as string
+          const nodes = adminBridge.getNodes?.() ?? reactFlow.getNodes()
+          const node = nodes.find(n => n.data.nodeNumber === num)
+          if (!node) return JSON.stringify({ error: `Node #${num} not found` })
+          if (adminBridge.updateNodeDescription) {
+            adminBridge.updateNodeDescription(node.id, desc)
+            return JSON.stringify({ success: true })
+          }
+          return JSON.stringify({ error: 'Not available' })
+        }
+        case 'save_project_file': {
+          const filename = toolInput.filename as string
+          const content = toolInput.content as string
+          const purpose = toolInput.purpose as string
+          const workspacePath = adminBridge.workspacePath
+          if (!workspacePath) return JSON.stringify({ error: 'No workspace path' })
+          try {
+            const result = await window.opencoveApi.admin.saveProjectFile({ workspacePath, filename, content, purpose })
+            return JSON.stringify(result)
+          } catch (e) { return JSON.stringify({ error: e instanceof Error ? e.message : 'Unknown' }) }
+        }
+        case 'list_project_files': {
+          const workspacePath = adminBridge.workspacePath
+          if (!workspacePath) return JSON.stringify({ error: 'No workspace path' })
+          try {
+            const result = await window.opencoveApi.admin.listProjectFiles({ workspacePath })
+            return JSON.stringify(result)
+          } catch (e) { return JSON.stringify({ error: e instanceof Error ? e.message : 'Unknown' }) }
+        }
+        case 'read_project_file': {
+          const filename = toolInput.filename as string
+          const workspacePath = adminBridge.workspacePath
+          if (!workspacePath) return JSON.stringify({ error: 'No workspace path' })
+          try {
+            const result = await window.opencoveApi.admin.readProjectFile({ workspacePath, filename })
+            return JSON.stringify(result)
+          } catch (e) { return JSON.stringify({ error: e instanceof Error ? e.message : 'Unknown' }) }
         }
         default: return JSON.stringify({ error: `Unknown tool: ${name}` })
       }

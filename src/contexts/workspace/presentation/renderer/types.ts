@@ -100,6 +100,8 @@ export interface TerminalNodeData {
   width: number
   height: number
   kind: WorkspaceNodeKind
+  nodeNumber?: number
+  description?: string
   status: AgentRuntimeStatus | null
   startedAt: string | null
   endedAt: string | null

@@ -64,7 +64,20 @@ When user asks about usage/status/compact for a specific agent:
 ## Agent Profiles
 Available specialist profiles: Architect (\u{1F3D7}\uFE0F), Builder (\u{1F528}), QA Lead (\u{1F9EA}), Reviewer (\u{1F50D}), Release Engineer (\u{1F680}), Investigator (\u{1F52C}).
 When creating an agent, suggest an appropriate profile based on the task.
-Use the create_profiled_agent tool to launch a specialist agent with a profile and task.`
+Use the create_profiled_agent tool to launch a specialist agent with a profile and task.
+
+## Node Numbers
+Every node has a unique number (#10, #11, #12...). Use these numbers to reference nodes.
+When listing nodes, always show their numbers.
+Use rename_node and set_node_description to manage node labels.
+
+## Project Files
+You can save and manage project knowledge files:
+- save_project_file: Save agent outputs, reviews, plans as .md files in the project
+- list_project_files: See all saved files and what they're for
+- read_project_file: Read a file's content
+- When an agent produces valuable output, save it as a project file
+- When telling an agent to reference a file, use write_to_terminal with the file path`
 
 // Convert our tool schemas to OpenAI function-calling format
 function toolsToOpenAIFormat(): Array<Record<string, unknown>> {

@@ -25,6 +25,7 @@ interface PgViewerNodeProps {
   isConnected: boolean
   connectionId: string | null
   activeTable: string | null
+  nodeNumber?: number
   position: Point
   width: number
   height: number
@@ -53,6 +54,7 @@ export function PgViewerNode({
   isConnected,
   connectionId,
   activeTable,
+  nodeNumber,
   position,
   width,
   height,
@@ -183,6 +185,9 @@ export function PgViewerNode({
           onToggleMaximize?.()
         }}
       >
+        {nodeNumber != null ? (
+          <span className="pg-viewer-node__number">#{nodeNumber}</span>
+        ) : null}
         <span className="pg-viewer-node__title">
           {isConnected && database ? `PostgreSQL - ${database}` : 'PostgreSQL'}
         </span>
