@@ -74,4 +74,23 @@ export const OPENCOVE_TOOLS: Anthropic.Tool[] = [
       required: ['nodeId'],
     },
   },
+  {
+    name: 'create_profiled_agent',
+    description:
+      'Create a new agent with a specialist profile. Available profiles: architect, builder, qa, reviewer, release, investigator',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        profile: {
+          type: 'string',
+          description: 'Profile ID: architect, builder, qa, reviewer, release, investigator',
+        },
+        task: {
+          type: 'string',
+          description: 'The specific task for this agent',
+        },
+      },
+      required: ['profile', 'task'],
+    },
+  },
 ]

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { useTranslation } from '@app/renderer/i18n'
 import { AGENT_PROVIDER_LABEL, type AgentProvider } from '@contexts/settings/domain/agentSettings'
+import { AGENT_PROFILES, type AgentProfile } from '@contexts/agent/domain/profiles'
 import { LABEL_COLORS, type NodeLabelColorOverride } from '@shared/types/labelColor'
 
 function renderMark(checked: boolean): React.JSX.Element {
@@ -286,7 +287,7 @@ export function WorkspaceContextAgentProviderSubmenu({
   style: React.CSSProperties
   keepSubmenuOpen: () => void
   scheduleSubmenuClose: () => void
-  openAgentLauncherForProvider: (provider: AgentProvider) => void
+  openAgentLauncherForProvider: (provider: AgentProvider, profile?: AgentProfile) => void
 }): React.JSX.Element {
   return (
     <div
@@ -314,6 +315,25 @@ export function WorkspaceContextAgentProviderSubmenu({
         >
           <Play className="workspace-context-menu__icon" aria-hidden="true" />
           <span className="workspace-context-menu__label">{AGENT_PROVIDER_LABEL[provider]}</span>
+        </button>
+      ))}
+
+      {sortedInstalledProviders.length > 0 && AGENT_PROFILES.length > 0 && (
+        <div className="workspace-context-menu__separator" />
+      )}
+
+      {AGENT_PROFILES.map(profile => (
+        <button
+          key={profile.id}
+          type="button"
+          data-testid={`workspace-context-run-agent-profile-${profile.id}`}
+          onClick={() => {
+            openAgentLauncherForProvider(sortedInstalledProviders[0] ?? 'claude-code', profile)
+          }}
+          title={profile.description}
+        >
+          <span className="workspace-context-menu__icon workspace-context-menu__profile-emoji" aria-hidden="true">{profile.emoji}</span>
+          <span className="workspace-context-menu__label">{profile.name}</span>
         </button>
       ))}
     </div>

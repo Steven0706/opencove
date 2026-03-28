@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type JSX } from 'rea
 import { useReactFlow, type Node } from '@xyflow/react'
 import { X, Send, ChevronRight, ChevronDown, Trash2, ExternalLink, Settings2, ClipboardPaste } from 'lucide-react'
 import { AdminAgentService, type AdminMessage, type LLMConfig, type ToolExecutor } from '@contexts/admin/application/AdminAgentService'
+import { getProfileById } from '@contexts/agent/domain/profiles'
 import { adminBridge } from '../adminBridge'
 import type { TerminalNodeData } from '@contexts/workspace/presentation/renderer/types'
 
@@ -121,6 +122,22 @@ export function AdminPanel({ onClose }: AdminPanelProps): JSX.Element {
         case 'maximize_node': { adminBridge.toggleMaximizeNode?.(toolInput.nodeId as string); return JSON.stringify({ success: true }) }
         case 'close_node': { await adminBridge.closeNode?.(toolInput.nodeId as string); return JSON.stringify({ success: true }) }
         case 'focus_node': { adminBridge.focusNode?.(toolInput.nodeId as string); return JSON.stringify({ success: true }) }
+        case 'create_profiled_agent': {
+          const profileId = toolInput.profile as string
+          const task = toolInput.task as string
+          const profile = getProfileById(profileId)
+          if (!profile) return JSON.stringify({ error: `Unknown profile: ${profileId}. Available: architect, builder, qa, reviewer, release, investigator` })
+          if (!adminBridge.createTerminalNode) return JSON.stringify({ error: 'Not available' })
+          const nodeId = await adminBridge.createTerminalNode()
+          if (!nodeId) return JSON.stringify({ error: 'Failed to create terminal' })
+          const nodes = adminBridge.getNodes?.() ?? reactFlow.getNodes()
+          const node = nodes.find(n => n.id === nodeId)
+          if (!node?.data.sessionId) return JSON.stringify({ error: 'No session found for terminal' })
+          const prompt = `${profile.systemInstruction}\n\n---\n\nTask: ${task}`
+          const escaped = prompt.replace(/'/g, "'\\''")
+          await window.opencoveApi.pty.write({ sessionId: node.data.sessionId, data: `claude -p '${escaped}'\n` })
+          return JSON.stringify({ success: true, nodeId, profile: profile.name, emoji: profile.emoji })
+        }
         default: return JSON.stringify({ error: `Unknown tool: ${name}` })
       }
     },

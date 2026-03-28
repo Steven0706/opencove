@@ -41,7 +41,7 @@ interface WorkspaceContextMenuProps {
   openTaskCreator: () => void
   openAgentLauncher: () => void
   agentProviderOrder: AgentProvider[]
-  openAgentLauncherForProvider: (provider: AgentProvider) => void
+  openAgentLauncherForProvider: (provider: AgentProvider, profile?: import('@contexts/agent/domain/profiles').AgentProfile) => void
   spaces: WorkspaceSpaceState[]
   magneticSnappingEnabled: boolean
   onToggleMagneticSnapping: () => void

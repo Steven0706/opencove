@@ -7,6 +7,7 @@ import {
   type StandardWindowSizeBucket,
 } from '@contexts/settings/domain/agentSettings'
 import { resolveSpaceWorkingDirectory } from '@contexts/space/application/resolveSpaceWorkingDirectory'
+import type { AgentProfile } from '@contexts/agent/domain/profiles'
 import type { AgentNodeData, Point, TerminalNodeData, WorkspaceSpaceState } from '../../../types'
 import { clearResumeSessionBinding } from '../../../utils/agentResumeBinding'
 import { resolveDefaultAgentWindowSize } from '../constants'
@@ -55,12 +56,12 @@ export function useWorkspaceCanvasAgentLauncher({
   buildAgentNodeTitle,
 }: UseAgentLauncherParams): {
   openAgentLauncher: () => void
-  openAgentLauncherForProvider: (provider: AgentNodeData['provider']) => void
+  openAgentLauncherForProvider: (provider: AgentNodeData['provider'], profile?: AgentProfile) => void
 } {
   const { t } = useTranslation()
 
   const openAgentLauncherForProvider = useCallback(
-    (provider: AgentNodeData['provider']) => {
+    (provider: AgentNodeData['provider'], profile?: AgentProfile) => {
       if (!contextMenu || contextMenu.kind !== 'pane') {
         return
       }
@@ -80,10 +81,11 @@ export function useWorkspaceCanvasAgentLauncher({
           const model = resolveAgentModel(agentSettings, provider)
           const anchorSpace = findContainingSpaceByAnchor(spacesRef.current, cursorAnchor)
           const executionDirectory = resolveSpaceWorkingDirectory(anchorSpace, workspacePath)
+          const prompt = profile?.systemInstruction ?? ''
           const launched = await window.opencoveApi.agent.launch({
             provider,
             cwd: executionDirectory,
-            prompt: '',
+            prompt,
             mode: 'new',
             model,
             agentFullAccess: agentSettings.agentFullAccess,
@@ -92,9 +94,10 @@ export function useWorkspaceCanvasAgentLauncher({
           })
 
           const modelLabel = launched.effectiveModel ?? model
+          const titlePrefix = profile ? `${profile.emoji} ${profile.name} | ` : ''
           const created = await createNodeForSession({
             sessionId: launched.sessionId,
-            title: buildAgentNodeTitle(provider, modelLabel),
+            title: `${titlePrefix}${buildAgentNodeTitle(provider, modelLabel)}`,
             anchor,
             kind: 'agent',
             placement: {
@@ -102,7 +105,7 @@ export function useWorkspaceCanvasAgentLauncher({
             },
             agent: {
               provider,
-              prompt: '',
+              prompt,
               model,
               effectiveModel: launched.effectiveModel,
               launchMode: launched.launchMode,

@@ -105,7 +105,7 @@ export interface WorkspaceCanvasViewProps {
   arrangeInSpace: (spaceId: string, style?: WorkspaceArrangeStyle) => void
   openTaskCreator: () => void
   openAgentLauncher: () => void
-  openAgentLauncherForProvider: (provider: AgentNodeData['provider']) => void
+  openAgentLauncherForProvider: (provider: AgentNodeData['provider'], profile?: import('@contexts/agent/domain/profiles').AgentProfile) => void
   createSpaceFromSelectedNodes: () => void
   clearNodeSelection: () => void
   canConvertSelectedNoteToTask: boolean

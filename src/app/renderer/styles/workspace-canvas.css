@@ -206,8 +206,8 @@
 
 .workspace-canvas__minimap-dock {
   position: absolute;
-  right: 16px;
-  bottom: 16px;
+  left: 16px;
+  bottom: 120px;
   z-index: 7;
   width: 36px;
   height: 36px;
@@ -220,8 +220,8 @@
 
 .workspace-canvas__minimap-toggle {
   position: absolute;
-  right: 8px;
-  bottom: 8px;
+  left: 0;
+  bottom: 0;
   z-index: 8;
   border: 1px solid var(--cove-canvas-control-border);
   border-radius: 999px;
