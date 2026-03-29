@@ -1,8 +1,92 @@
-import React, { useEffect, useMemo, useRef } from 'react'
-import { Bell, Map as MapIcon, Monitor, Moon, PanelLeft, Settings, Sun } from 'lucide-react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Bell, Globe, Map as MapIcon, Monitor, Moon, PanelLeft, Settings, Sun } from 'lucide-react'
 import { useTranslation } from '@app/renderer/i18n'
 import type { UiTheme } from '@contexts/settings/domain/agentSettings'
 import { getUiThemeLabel } from '@app/renderer/i18n/labels'
+
+function RemoteAccessTile(): React.JSX.Element | null {
+  const { t } = useTranslation()
+  const [state, setState] = useState<{
+    running: boolean
+    port: number
+    lanUrl: string | null
+  }>({ running: false, port: 3200, lanUrl: null })
+
+  const isWeb = window.opencoveApi?.meta?.platform === 'web'
+
+  useEffect(() => {
+    if (isWeb || !window.opencoveApi?.webServer) return
+
+    window.opencoveApi.webServer.getState().then(setState).catch(() => {})
+    const unsub = window.opencoveApi.webServer.onState(setState)
+    return unsub
+  }, [isWeb])
+
+  const handleToggle = useCallback(async () => {
+    if (!window.opencoveApi?.webServer) {
+      return
+    }
+
+    try {
+      if (state.running) {
+        const s = await window.opencoveApi.webServer.stop()
+        setState(s)
+      } else {
+        const s = await window.opencoveApi.webServer.start()
+        setState(s)
+      }
+    } catch (err) {
+      // Show error visibly for debugging
+      const msg = err instanceof Error ? err.message : String(err)
+      document.title = `Error: ${msg}`
+    }
+  }, [state.running])
+
+  const handleCopyUrl = useCallback(() => {
+    if (state.lanUrl) {
+      void window.opencoveApi?.clipboard?.writeText(state.lanUrl)
+    }
+  }, [state.lanUrl])
+
+  // Don't show in web mode
+  if (isWeb) return null
+
+  return (
+    <button
+      type="button"
+      className={`control-center-tile${state.running ? ' control-center-tile--on' : ''}`}
+      data-testid="control-center-toggle-remote-access"
+      onClick={handleToggle}
+    >
+      <span className="control-center-tile__icon" aria-hidden="true">
+        <Globe size={18} />
+      </span>
+      <span className="control-center-tile__text">
+        <span className="control-center-tile__label">
+          {t('controlCenter.remoteAccess') ?? 'Remote Access'}
+        </span>
+        <span className="control-center-tile__subtitle">
+          {state.running && state.lanUrl ? (
+            <span
+              onClick={e => {
+                e.stopPropagation()
+                handleCopyUrl()
+              }}
+              style={{ cursor: 'pointer' }}
+              title="Click to copy URL"
+            >
+              {state.lanUrl}
+            </span>
+          ) : state.running ? (
+            'Starting...'
+          ) : (
+            t('controlCenter.off') ?? 'Off'
+          )}
+        </span>
+      </span>
+    </button>
+  )
+}
 
 export function ControlCenter({
   isOpen,
@@ -90,6 +174,9 @@ export function ControlCenter({
   if (!isOpen) {
     return null
   }
+
+  // Skip rendering in web mode (Remote Access tile doesn't make sense in browser)
+  const isWeb = window.opencoveApi?.meta?.platform === 'web'
 
   return (
     <div
@@ -179,6 +266,8 @@ export function ControlCenter({
               </span>
             </span>
           </button>
+
+          <RemoteAccessTile />
         </div>
 
         <div className="control-center__section">

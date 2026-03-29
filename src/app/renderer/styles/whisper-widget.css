@@ -188,3 +188,37 @@
 .whisper-widget__copy-btn:hover {
   color: var(--cove-text);
 }
+
+.whisper-widget__toast {
+  position: absolute;
+  bottom: 44px;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--cove-node-border);
+  background: var(--cove-node-surface);
+  box-shadow: 0 4px 16px var(--cove-node-shadow-color);
+  max-width: 280px;
+  animation: whisper-toast-in 0.2s ease-out, whisper-toast-out 0.3s ease-in 2.7s forwards;
+}
+
+.whisper-widget__toast-text {
+  font-size: 11px;
+  color: var(--cove-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes whisper-toast-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes whisper-toast-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}

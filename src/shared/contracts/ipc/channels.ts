@@ -63,6 +63,10 @@ export const IPC_CHANNELS = {
   pgDisconnect: 'pg:disconnect',
   pgListTables: 'pg:list-tables',
   pgQuery: 'pg:query',
+  webServerStart: 'web-server:start',
+  webServerStop: 'web-server:stop',
+  webServerGetState: 'web-server:get-state',
+  webServerState: 'web-server:state',
 } as const
 
 export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS]

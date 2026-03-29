@@ -4,9 +4,16 @@
 import type { Node } from '@xyflow/react'
 import type { TerminalNodeData } from '@contexts/workspace/presentation/renderer/types'
 
+export interface CreateAgentNodeParams {
+  prompt: string
+  profileName?: string
+  profileEmoji?: string
+}
+
 export interface AdminBridge {
   getNodes?: () => Node<TerminalNodeData>[]
   createTerminalNode?: () => Promise<string | null>
+  createAgentNode?: (params: CreateAgentNodeParams) => Promise<string | null>
   createNoteNode?: (text?: string) => string | null
   closeNode?: (nodeId: string) => Promise<void>
   toggleMaximizeNode?: (nodeId: string) => void

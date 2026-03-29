@@ -22,6 +22,7 @@ import { registerWindowMetricsIpcHandlers } from './registerWindowMetricsIpcHand
 import { registerWhisperIpcHandlers } from '../../../contexts/whisper/presentation/main-ipc/register'
 import { registerPgViewerIpcHandlers } from '../../../contexts/pgViewer/presentation/main-ipc/register'
 import { registerAdminIpcHandlers } from '../../../contexts/admin/presentation/main-ipc/register'
+import { registerWebServerIpcHandlers } from './registerWebServerIpcHandlers'
 
 export type { IpcRegistrationDisposable } from './types'
 
@@ -72,6 +73,7 @@ export function registerIpcHandlers(deps?: {
     registerWhisperIpcHandlers(),
     registerPgViewerIpcHandlers(),
     registerAdminIpcHandlers(),
+    registerWebServerIpcHandlers(),
   ]
 
   return {

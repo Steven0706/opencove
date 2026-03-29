@@ -8,6 +8,15 @@ import type { TerminalNodeData } from '@contexts/workspace/presentation/renderer
 
 const CONFIG_STORAGE_KEY = 'opencove-admin-llm-config'
 const CHAT_HISTORY_KEY = 'opencove-admin-chat-history'
+const CONFIG_FILE = 'admin-config.json'
+const CHAT_FILE = 'admin-chat.json'
+
+function getWorkspacePath(): string {
+  return adminBridge.workspacePath ?? ''
+}
+
+// Shared storage: save to host via IPC (synced between Electron and web)
+// Falls back to localStorage if IPC unavailable
 
 function loadConfig(): LLMConfig | null {
   try {
@@ -16,8 +25,30 @@ function loadConfig(): LLMConfig | null {
   } catch { return null }
 }
 
+async function loadConfigAsync(): Promise<LLMConfig | null> {
+  const wp = getWorkspacePath()
+  if (wp && window.opencoveApi?.admin?.readProjectFile) {
+    try {
+      const r = await window.opencoveApi.admin.readProjectFile({ workspacePath: wp, filename: CONFIG_FILE })
+      if (r?.content) {
+        const config = JSON.parse(r.content) as LLMConfig
+        localStorage.setItem(CONFIG_STORAGE_KEY, r.content)
+        return config
+      }
+    } catch { /* fall through to localStorage */ }
+  }
+  return loadConfig()
+}
+
 function saveConfig(config: LLMConfig): void {
-  localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config))
+  const json = JSON.stringify(config)
+  localStorage.setItem(CONFIG_STORAGE_KEY, json)
+  const wp = getWorkspacePath()
+  if (wp && window.opencoveApi?.admin?.saveProjectFile) {
+    window.opencoveApi.admin.saveProjectFile({
+      workspacePath: wp, filename: CONFIG_FILE, content: json, purpose: 'admin-config',
+    }).catch(() => {})
+  }
 }
 
 function loadChatHistory(): AdminMessage[] {
@@ -27,10 +58,31 @@ function loadChatHistory(): AdminMessage[] {
   } catch { return [] }
 }
 
+async function loadChatHistoryAsync(): Promise<AdminMessage[]> {
+  const wp = getWorkspacePath()
+  if (wp && window.opencoveApi?.admin?.readProjectFile) {
+    try {
+      const r = await window.opencoveApi.admin.readProjectFile({ workspacePath: wp, filename: CHAT_FILE })
+      if (r?.content) {
+        const msgs = JSON.parse(r.content) as AdminMessage[]
+        localStorage.setItem(CHAT_HISTORY_KEY, r.content)
+        return msgs
+      }
+    } catch { /* fall through */ }
+  }
+  return loadChatHistory()
+}
+
 function saveChatHistory(msgs: AdminMessage[]): void {
-  // Keep last 200 messages to avoid localStorage bloat
   const trimmed = msgs.slice(-200)
-  localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(trimmed))
+  const json = JSON.stringify(trimmed)
+  localStorage.setItem(CHAT_HISTORY_KEY, json)
+  const wp = getWorkspacePath()
+  if (wp && window.opencoveApi?.admin?.saveProjectFile) {
+    window.opencoveApi.admin.saveProjectFile({
+      workspacePath: wp, filename: CHAT_FILE, content: json, purpose: 'admin-chat',
+    }).catch(() => {})
+  }
 }
 
 interface AdminPanelProps {
@@ -51,11 +103,17 @@ export function AdminPanel({ onClose }: AdminPanelProps): JSX.Element {
   const [draftModel, setDraftModel] = useState(PRESETS[0].model)
   const [draftApiKey, setDraftApiKey] = useState('')
   const [messages, setMessages] = useState<AdminMessage[]>(() => loadChatHistory())
+
+  // On mount: load config and chat from host (shared between Electron and web)
+  useEffect(() => {
+    loadConfigAsync().then(c => { if (c) setConfig(c) }).catch(() => {})
+    loadChatHistoryAsync().then(m => { if (m.length) setMessages(m) }).catch(() => {})
+  }, [])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [expandedTools, setExpandedTools] = useState<Set<string>>(new Set())
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
   const serviceRef = useRef<AdminAgentService | null>(null)
   const reactFlow = useReactFlow<Node<TerminalNodeData>>()
 
@@ -109,7 +167,7 @@ export function AdminPanel({ onClose }: AdminPanelProps): JSX.Element {
           const nodes = adminBridge.getNodes?.() ?? reactFlow.getNodes()
           const node = nodes.find(n => n.id === toolInput.nodeId)
           if (!node?.data.sessionId) return JSON.stringify({ error: 'Node/session not found' })
-          await window.opencoveApi.pty.write({ sessionId: node.data.sessionId, data: (toolInput.text as string) + '\n' })
+          await window.opencoveApi.pty.write({ sessionId: node.data.sessionId, data: (toolInput.text as string) + '\r' })
           return JSON.stringify({ success: true })
         }
         case 'read_agent_last_message': {
@@ -129,15 +187,14 @@ export function AdminPanel({ onClose }: AdminPanelProps): JSX.Element {
           const task = toolInput.task as string
           const profile = getProfileById(profileId)
           if (!profile) return JSON.stringify({ error: `Unknown profile: ${profileId}. Available: architect, builder, qa, reviewer, release, investigator` })
-          if (!adminBridge.createTerminalNode) return JSON.stringify({ error: 'Not available' })
-          const nodeId = await adminBridge.createTerminalNode()
-          if (!nodeId) return JSON.stringify({ error: 'Failed to create terminal' })
-          const nodes = adminBridge.getNodes?.() ?? reactFlow.getNodes()
-          const node = nodes.find(n => n.id === nodeId)
-          if (!node?.data.sessionId) return JSON.stringify({ error: 'No session found for terminal' })
+          if (!adminBridge.createAgentNode) return JSON.stringify({ error: 'Not available' })
           const prompt = `${profile.systemInstruction}\n\n---\n\nTask: ${task}`
-          const escaped = prompt.replace(/'/g, "'\\''")
-          await window.opencoveApi.pty.write({ sessionId: node.data.sessionId, data: `claude -p '${escaped}'\n` })
+          const nodeId = await adminBridge.createAgentNode({
+            prompt,
+            profileName: profile.name,
+            profileEmoji: profile.emoji,
+          })
+          if (!nodeId) return JSON.stringify({ error: 'Failed to create agent node' })
           return JSON.stringify({ success: true, nodeId, profile: profile.name, emoji: profile.emoji })
         }
         case 'rename_node': {
@@ -230,15 +287,14 @@ export function AdminPanel({ onClose }: AdminPanelProps): JSX.Element {
     }
   }, [messages.length, toolExecutor])
 
-  const handleSend = useCallback(() => {
-    const trimmed = input.trim()
+  const handleSend = useCallback((overrideText?: string) => {
+    const trimmed = (overrideText ?? input).trim()
     if (!trimmed || !serviceRef.current) return
     setInput('')
     pendingQueueRef.current.push(trimmed)
     if (!isProcessingRef.current) {
       void processQueue()
     }
-    // If LLM is busy, message stays in queue — shown as "(queued)" in UI
   }, [input, processQueue])
 
   const handlePaste = useCallback(async () => {
@@ -370,7 +426,22 @@ export function AdminPanel({ onClose }: AdminPanelProps): JSX.Element {
       </div>
       <div className="admin-panel__input">
         <button type="button" className="admin-panel__paste-btn" onClick={() => void handlePaste()} title="Paste from clipboard"><ClipboardPaste size={14} /></button>
-        <input ref={inputRef} type="text" className="admin-panel__input-field" placeholder={isLoading ? 'Type to queue...' : 'Type a command...'} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }} />
+        <textarea ref={inputRef} className="admin-panel__input-field" placeholder={isLoading ? 'Type to queue...' : 'Shift+Enter to send'} value={input} rows={2} onChange={e => setInput(e.target.value)} onKeyDown={e => {
+          if (e.key === 'Enter' && e.shiftKey) {
+            e.preventDefault()
+            if (input.trim().length > 0) {
+              handleSend()
+            } else {
+              // Empty input: read clipboard and send directly
+              void (async () => {
+                try {
+                  const clip = await window.opencoveApi.clipboard.readText()
+                  if (clip?.trim()) handleSend(clip.trim())
+                } catch { /* ignore */ }
+              })()
+            }
+          }
+        }} />
         <button type="button" className="admin-panel__send-btn" onClick={() => handleSend()} disabled={input.trim().length === 0}><Send size={14} /></button>
       </div>
     </div>

@@ -9,7 +9,10 @@
     "src/contexts/**/application/**/*",
     "src/contexts/**/infrastructure/**/*",
     "src/contexts/**/presentation/main-ipc/**/*",
-    "src/platform/**/*"
+    "src/platform/**/*",
+    "src/server/**/*",
+    "vite.config.web.*",
+    "scripts/**/*"
   ],
   "compilerOptions": {
     "composite": true,

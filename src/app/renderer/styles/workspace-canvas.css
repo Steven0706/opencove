@@ -206,16 +206,16 @@
 
 .workspace-canvas__minimap-dock {
   position: absolute;
-  left: 16px;
-  bottom: 120px;
+  left: 72px;
+  bottom: 16px;
   z-index: 7;
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
 }
 
 .workspace-canvas__minimap-dock--expanded {
-  width: min(15vw, 200px);
-  height: min(15vw, 136px);
+  width: min(10vw, 140px);
+  height: min(10vw, 95px);
 }
 
 .workspace-canvas__minimap-toggle {

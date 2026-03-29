@@ -184,6 +184,14 @@ export interface OpenCoveApi {
     listTables: (payload: PgListTablesInput) => Promise<PgListTablesResult>
     query: (payload: PgQueryInput) => Promise<PgQueryResult>
   }
+  webServer: {
+    start: (payload?: { port?: number }) => Promise<{ running: boolean; port: number; lanUrl: string | null }>
+    stop: () => Promise<{ running: boolean; port: number; lanUrl: string | null }>
+    getState: () => Promise<{ running: boolean; port: number; lanUrl: string | null }>
+    onState: (
+      listener: (state: { running: boolean; port: number; lanUrl: string | null }) => void,
+    ) => UnsubscribeFn
+  }
 }
 
 declare global {

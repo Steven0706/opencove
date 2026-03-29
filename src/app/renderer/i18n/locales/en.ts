@@ -77,6 +77,7 @@ export const en = {
     minimap: 'Minimap',
     theme: 'Theme',
     agentStandbyBanner: 'Agent standby banner',
+    remoteAccess: 'Remote Access',
     on: 'On',
     off: 'Off',
   },

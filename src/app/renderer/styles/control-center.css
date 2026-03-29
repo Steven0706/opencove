@@ -50,8 +50,8 @@
 
 .control-center__tiles {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: 1fr;
+  gap: 8px;
 }
 
 .control-center-tile {
@@ -129,10 +129,8 @@
 .control-center-tile__subtitle {
   font-size: calc(11px * var(--cove-ui-font-scale));
   color: var(--cove-text-muted);
-  line-height: 1.1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.3;
+  word-break: break-all;
 }
 
 .control-center__section {

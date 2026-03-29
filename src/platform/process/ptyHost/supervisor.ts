@@ -357,7 +357,12 @@ export class PtyHostSupervisor {
   }
 
   public async spawn(options: PtyHostSpawnOptions): Promise<{ sessionId: string }> {
-    const env = options.env ? { ...options.env } : { ...process.env }
+    const baseEnv = options.env ? { ...options.env } : { ...process.env }
+    // Ensure TERM is always set (Finder-launched Electron may lack it)
+    const env = {
+      ...baseEnv,
+      TERM: baseEnv.TERM || 'xterm-256color',
+    }
     let attemptedChild: PtyHostProcess | null = null
     const spawnOnce = async (): Promise<{ sessionId: string }> => {
       await this.ensureReady()

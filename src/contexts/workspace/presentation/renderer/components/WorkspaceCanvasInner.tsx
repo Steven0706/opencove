@@ -7,8 +7,13 @@ import type { WorkspaceCanvasProps } from './workspaceCanvas/types'
 import { adminBridge } from '@contexts/admin/presentation/renderer/adminBridge'
 import { maximizeNode } from '../utils/nodeMaximize'
 import { createTerminalNodeAtFlowPosition } from './workspaceCanvas/hooks/useInteractions.paneNodeCreation'
-import { resolveDefaultTerminalWindowSize } from './workspaceCanvas/constants'
+import {
+  resolveDefaultTerminalWindowSize,
+  resolveDefaultAgentWindowSize,
+} from './workspaceCanvas/constants'
 import { resolveNodePlacementAnchorFromViewportCenter } from './workspaceCanvas/helpers'
+import { resolveAgentModel } from '@contexts/settings/domain/agentSettings'
+import { clearResumeSessionBinding } from '@contexts/agent/domain/agentResumeBinding'
 export function WorkspaceCanvasInner({
   workspaceId,
   onShowMessage,
@@ -420,6 +425,47 @@ export function WorkspaceCanvasInner({
       })
       return createdNodeId
     }
+    adminBridge.createAgentNode = async ({ prompt, profileName, profileEmoji }) => {
+      const provider = agentSettings.defaultProvider
+      const model = resolveAgentModel(agentSettings, provider)
+      const centerScreen = { x: window.innerWidth / 2, y: window.innerHeight / 2 }
+      const flowCenter = reactFlow.screenToFlowPosition(centerScreen)
+      const size = resolveDefaultAgentWindowSize(agentSettings.standardWindowSizeBucket)
+      const anchor = resolveNodePlacementAnchorFromViewportCenter(flowCenter, size)
+      const launched = await window.opencoveApi.agent.launch({
+        provider,
+        cwd: workspacePath,
+        prompt,
+        mode: 'new',
+        model,
+        agentFullAccess: agentSettings.agentFullAccess,
+        cols: 80,
+        rows: 24,
+      })
+      const modelLabel = launched.effectiveModel ?? model
+      const titlePrefix = profileName ? `${profileEmoji ?? ''} ${profileName} | ` : ''
+      const created = await nodeStore.createNodeForSession({
+        sessionId: launched.sessionId,
+        title: `${titlePrefix}${buildAgentNodeTitle(provider, modelLabel)}`,
+        anchor,
+        kind: 'agent',
+        agent: {
+          provider,
+          prompt,
+          model,
+          effectiveModel: launched.effectiveModel,
+          launchMode: launched.launchMode,
+          ...clearResumeSessionBinding(),
+          executionDirectory: workspacePath,
+          expectedDirectory: workspacePath,
+          directoryMode: 'workspace' as const,
+          customDirectory: null,
+          shouldCreateDirectory: false,
+          taskId: null,
+        },
+      })
+      return created?.id ?? null
+    }
     adminBridge.createNoteNode = (text?: string) => {
       const centerScreen = {
         x: window.innerWidth / 2,
@@ -468,6 +514,7 @@ export function WorkspaceCanvasInner({
     return () => {
       adminBridge.getNodes = undefined
       adminBridge.createTerminalNode = undefined
+      adminBridge.createAgentNode = undefined
       adminBridge.createNoteNode = undefined
       adminBridge.closeNode = undefined
       adminBridge.toggleMaximizeNode = undefined
@@ -488,6 +535,9 @@ export function WorkspaceCanvasInner({
     workspacePath,
     agentSettings.defaultTerminalProfileId,
     agentSettings.standardWindowSizeBucket,
+    agentSettings.defaultProvider,
+    agentSettings.agentFullAccess,
+    buildAgentNodeTitle,
     onSpacesChange,
     onRequestPersistFlush,
   ])

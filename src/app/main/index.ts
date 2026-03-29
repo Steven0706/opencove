@@ -295,6 +295,9 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     showWindow()
+    if (is.dev) {
+      mainWindow.webContents.openDevTools({ mode: 'detach' })
+    }
   })
 
   // 兜底：Electron #42409 - titleBarOverlay + show:false 时 ready-to-show 在 Windows 上可能不触发

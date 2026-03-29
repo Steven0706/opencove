@@ -78,6 +78,7 @@ export const zhCN = {
     minimap: '缩略图',
     theme: '主题',
     agentStandbyBanner: 'Agent 完成提醒',
+    remoteAccess: '远程访问',
     on: '已开启',
     off: '已关闭',
   },

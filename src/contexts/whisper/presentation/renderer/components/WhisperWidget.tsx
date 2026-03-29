@@ -10,6 +10,7 @@ export function WhisperWidget(): JSX.Element {
   const [historyItems, setHistoryItems] = useState<WhisperHistoryItem[]>([])
   const [historyLoading, setHistoryLoading] = useState(false)
   const [historyCopiedIndex, setHistoryCopiedIndex] = useState<number | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
@@ -20,6 +21,11 @@ export function WhisperWidget(): JSX.Element {
   const animFrameRef = useRef<number>(0)
   const isRecordingRef = useRef(false)
   const mimeTypeRef = useRef('audio/webm')
+
+  const showToast = useCallback((text: string) => {
+    setToast(text)
+    setTimeout(() => setToast(null), 3000)
+  }, [])
 
   const drawWaveform = useCallback(() => {
     if (!isRecordingRef.current) return
@@ -94,15 +100,15 @@ export function WhisperWidget(): JSX.Element {
       })
       if (result.success && result.text) {
         await window.opencoveApi.clipboard.writeText(result.text)
+        showToast(result.text)
       }
       setErrorDetail(null)
     } catch (err) {
       setErrorDetail(`${err instanceof Error ? err.message : 'Failed'}`)
     }
     setState('idle')
-  }, [])
+  }, [showToast])
 
-  // Toggle: click to start, click again to stop
   const handleMicToggle = useCallback(async () => {
     if (state === 'recording') {
       stopAndTranscribe()
@@ -169,11 +175,9 @@ export function WhisperWidget(): JSX.Element {
 
   return (
     <div className="whisper-widget">
+      {/* Mic button — always in same position, color changes when recording */}
       {(state === 'idle' || state === 'recording') && (
         <div className="whisper-widget__main">
-          {state === 'recording' && (
-            <canvas ref={canvasRef} className="whisper-widget__waveform" width={120} height={32} />
-          )}
           <button
             type="button"
             className={`whisper-widget__mic-btn ${state === 'recording' ? 'whisper-widget__mic-btn--active' : ''}`}
@@ -182,6 +186,9 @@ export function WhisperWidget(): JSX.Element {
           >
             <Mic size={16} />
           </button>
+          {state === 'recording' && (
+            <canvas ref={canvasRef} className="whisper-widget__waveform" width={120} height={32} />
+          )}
           {state === 'idle' && (
             <button type="button" className="whisper-widget__history-btn" onClick={() => void handleHistory()} title="History">
               <History size={14} />
@@ -198,6 +205,14 @@ export function WhisperWidget(): JSX.Element {
 
       {errorDetail && state === 'idle' && (
         <div className="whisper-widget__error" title={errorDetail}>!</div>
+      )}
+
+      {/* Toast bubble showing transcribed text + "Copied" */}
+      {toast && (
+        <div className="whisper-widget__toast">
+          <Check size={12} style={{ flexShrink: 0, color: '#4ade80' }} />
+          <span className="whisper-widget__toast-text">{toast}</span>
+        </div>
       )}
 
       {state === 'history' && (

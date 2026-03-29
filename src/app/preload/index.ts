@@ -293,6 +293,41 @@ const opencoveApi = {
     query: (payload: PgQueryInput): Promise<PgQueryResult> =>
       invokeIpc(IPC_CHANNELS.pgQuery, payload),
   },
+  webServer: {
+    start: (payload?: { port?: number }): Promise<{ running: boolean; port: number; lanUrl: string | null }> =>
+      invokeIpc(IPC_CHANNELS.webServerStart, payload),
+    stop: (): Promise<{ running: boolean; port: number; lanUrl: string | null }> =>
+      invokeIpc(IPC_CHANNELS.webServerStop),
+    getState: (): Promise<{ running: boolean; port: number; lanUrl: string | null }> =>
+      invokeIpc(IPC_CHANNELS.webServerGetState),
+    onState: (listener: (state: { running: boolean; port: number; lanUrl: string | null }) => void): UnsubscribeFn => {
+      const handler = (
+        _event: Electron.IpcRendererEvent,
+        payload: { running: boolean; port: number; lanUrl: string | null },
+      ) => {
+        listener(payload)
+      }
+      ipcRenderer.on(IPC_CHANNELS.webServerState, handler)
+      return () => {
+        ipcRenderer.removeListener(IPC_CHANNELS.webServerState, handler)
+      }
+    },
+  },
+}
+
+// Forward PTY events from renderer back to main process for web server proxy.
+// When main→renderer sends pty:data/exit/state/metadata, we echo it back
+// to main via a dedicated channel so it can forward to web clients.
+const PTY_FORWARD_CHANNELS = [
+  IPC_CHANNELS.ptyData,
+  IPC_CHANNELS.ptyExit,
+  IPC_CHANNELS.ptyState,
+  IPC_CHANNELS.ptySessionMetadata,
+]
+for (const channel of PTY_FORWARD_CHANNELS) {
+  ipcRenderer.on(channel, (_event, payload) => {
+    ipcRenderer.send('web-server:forward-pty-event', { channel, payload })
+  })
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

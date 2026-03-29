@@ -153,6 +153,56 @@ export async function hydrateRuntimeNode({
   agentFullAccess: boolean
   defaultTerminalProfileId?: string | null
 }): Promise<Node<TerminalNodeData>> {
+  // In web mode, don't spawn new sessions — the host already has them.
+  // Query the host for live sessionIds, attach if active, load snapshot.
+  const isWeb = window.opencoveApi?.meta?.platform === 'web'
+  if (isWeb) {
+    try {
+      const resp = await fetch('/api/invoke', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channel: 'web-server:get-live-nodes' }),
+      })
+      const envelope = await resp.json()
+      const raw = envelope?.value ?? '[]'
+      const liveNodes = JSON.parse(typeof raw === 'string' ? raw : '[]') as Array<{
+        id: string; sessionId: string | null; kind: string; status: string | null
+      }>
+      const liveNode = liveNodes.find(n => n.id === node.id)
+
+      if (liveNode?.sessionId) {
+        // Active session — attach and get live snapshot
+        try { await window.opencoveApi.pty.attach({ sessionId: liveNode.sessionId }) } catch { /**/ }
+        let snapshot = ''
+        try {
+          const r = await window.opencoveApi.pty.snapshot({ sessionId: liveNode.sessionId })
+          snapshot = (r as { data?: string })?.data ?? ''
+        } catch { /**/ }
+
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            sessionId: liveNode.sessionId,
+            status: liveNode.status ?? node.data.status,
+            scrollback: snapshot || node.data.scrollback,
+          },
+        }
+      }
+
+      // No active session (ended/standby) — keep node as-is with persisted scrollback
+      if (liveNode) {
+        return {
+          ...node,
+          data: { ...node.data, status: liveNode.status ?? node.data.status },
+        }
+      }
+    } catch {
+      // Fall through
+    }
+    return node
+  }
+
   if (node.data.kind === 'agent' && node.data.agent) {
     return hydrateAgentNode({
       node,
