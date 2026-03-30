@@ -1,8 +1,15 @@
-.admin-toggle-btn {
+/* Bottom-right toolbar: Whisper | Admin | Nav */
+.canvas-toolbar {
   position: fixed;
   bottom: 16px;
   right: 16px;
   z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.canvas-toolbar__btn {
   width: 36px;
   height: 36px;
   border-radius: 999px;
@@ -16,12 +23,30 @@
   box-shadow: 0 2px 8px var(--cove-node-shadow-color);
   transition:
     background-color 0.16s ease,
-    color 0.16s ease;
+    color 0.16s ease,
+    border-color 0.16s ease;
+  flex-shrink: 0;
 }
 
-.admin-toggle-btn:hover {
+.canvas-toolbar__btn:hover {
   color: var(--cove-text);
   background: var(--cove-node-header-surface);
+}
+
+.canvas-toolbar__btn--active {
+  border-color: rgba(94, 156, 255, 0.5);
+  color: rgba(94, 156, 255, 0.95);
+}
+
+.canvas-toolbar__nav-wrapper {
+  position: relative;
+}
+
+/* Nav expand: single button expands to 3 on hover */
+.canvas-toolbar__nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .admin-panel {

@@ -48,6 +48,17 @@ export const OPENCOVE_TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: 'read_terminal_content',
+    description: 'Read the full visible content of a terminal or agent node, including all user input and output. Use this to see what the user typed and what the agent replied.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        nodeId: { type: 'string', description: 'The node ID of the terminal/agent' },
+      },
+      required: ['nodeId'],
+    },
+  },
+  {
     name: 'maximize_node',
     description: 'Maximize a node to fill the viewport, or restore it if already maximized',
     input_schema: {
@@ -115,6 +126,43 @@ export const OPENCOVE_TOOLS: Anthropic.Tool[] = [
         description: { type: 'string', description: "Short description of this node's purpose" },
       },
       required: ['nodeNumber', 'description'],
+    },
+  },
+  {
+    name: 'create_database',
+    description: 'Create a new PostgreSQL database viewer node on the canvas',
+    input_schema: {
+      type: 'object' as const,
+      properties: {},
+      required: [],
+    },
+  },
+  {
+    name: 'connect_database',
+    description: 'Connect a database viewer node to a PostgreSQL server. Provide connection details.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        nodeId: { type: 'string', description: 'The node ID of the database viewer (use list_nodes to find it)' },
+        host: { type: 'string', description: 'Database host (e.g., localhost, 192.168.1.100)' },
+        port: { type: 'number', description: 'Database port (default: 5432)' },
+        database: { type: 'string', description: 'Database name' },
+        user: { type: 'string', description: 'Database username' },
+        password: { type: 'string', description: 'Database password' },
+      },
+      required: ['nodeId', 'host', 'database', 'user', 'password'],
+    },
+  },
+  {
+    name: 'query_database',
+    description: 'Run a SQL query on a connected database node and return results',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        nodeId: { type: 'string', description: 'The node ID of the connected database viewer' },
+        sql: { type: 'string', description: 'SQL query to execute' },
+      },
+      required: ['nodeId', 'sql'],
     },
   },
   {

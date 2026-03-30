@@ -176,31 +176,20 @@ export function WhisperWidget(): JSX.Element {
   return (
     <div className="whisper-widget">
       {/* Mic button — always in same position, color changes when recording */}
-      {(state === 'idle' || state === 'recording') && (
-        <div className="whisper-widget__main">
-          <button
-            type="button"
-            className={`whisper-widget__mic-btn ${state === 'recording' ? 'whisper-widget__mic-btn--active' : ''}`}
-            onClick={() => void handleMicToggle()}
-            title={state === 'recording' ? 'Stop & copy to clipboard' : 'Start recording'}
-          >
-            <Mic size={16} />
-          </button>
-          {state === 'recording' && (
-            <canvas ref={canvasRef} className="whisper-widget__waveform" width={120} height={32} />
-          )}
-          {state === 'idle' && (
-            <button type="button" className="whisper-widget__history-btn" onClick={() => void handleHistory()} title="History">
-              <History size={14} />
-            </button>
-          )}
-        </div>
+      {(state === 'idle' || state === 'recording' || state === 'processing') && (
+        <button
+          type="button"
+          className={`whisper-widget__mic-btn ${state === 'recording' ? 'whisper-widget__mic-btn--active' : ''} ${state === 'processing' ? 'whisper-widget__mic-btn--processing' : ''}`}
+          onClick={() => { if (state !== 'processing') void handleMicToggle() }}
+          onContextMenu={e => { e.preventDefault(); if (state === 'idle') void handleHistory() }}
+          title={state === 'recording' ? 'Stop & copy' : state === 'processing' ? 'Processing...' : 'Click: record | Right-click: history'}
+        >
+          {state === 'processing' ? <Loader2 size={16} className="whisper-widget__spinner" /> : <Mic size={16} />}
+        </button>
       )}
 
-      {state === 'processing' && (
-        <div className="whisper-widget__processing">
-          <Loader2 size={16} className="whisper-widget__spinner" />
-        </div>
+      {state === 'recording' && (
+        <canvas ref={canvasRef} className="whisper-widget__waveform" width={120} height={32} />
       )}
 
       {errorDetail && state === 'idle' && (

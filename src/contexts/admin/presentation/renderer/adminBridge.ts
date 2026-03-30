@@ -20,6 +20,8 @@ export interface AdminBridge {
   focusNode?: (nodeId: string) => void
   updateNodeTitle?: (nodeId: string, title: string) => void
   updateNodeDescription?: (nodeId: string, description: string) => void
+  createPgViewerNode?: () => string | null
+  updatePgViewerConnection?: (nodeId: string, data: { host: string; port: number; database: string; user: string; connectionId: string | null; isConnected: boolean }) => void
   workspacePath?: string
 }
 

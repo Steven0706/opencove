@@ -510,6 +510,27 @@ export function WorkspaceCanvasInner({
       )
       onRequestPersistFlush?.()
     }
+    adminBridge.createPgViewerNode = () => {
+      const center = { x: window.innerWidth / 2, y: window.innerHeight / 2 }
+      const flowCenter = reactFlow.screenToFlowPosition(center)
+      const node = nodeStore.createPgViewerNode(flowCenter)
+      return node?.id ?? null
+    }
+    adminBridge.updatePgViewerConnection = (nodeId, data) => {
+      nodeStore.setNodes(prev =>
+        prev.map(n => {
+          if (n.id !== nodeId) return n
+          return {
+            ...n,
+            data: {
+              ...n.data,
+              pgViewer: { ...n.data.pgViewer, ...data, activeTable: n.data.pgViewer?.activeTable ?? null },
+            },
+          }
+        }),
+      )
+      onRequestPersistFlush?.()
+    }
     adminBridge.workspacePath = workspacePath
     return () => {
       adminBridge.getNodes = undefined
@@ -521,6 +542,8 @@ export function WorkspaceCanvasInner({
       adminBridge.focusNode = undefined
       adminBridge.updateNodeTitle = undefined
       adminBridge.updateNodeDescription = undefined
+      adminBridge.createPgViewerNode = undefined
+      adminBridge.updatePgViewerConnection = undefined
       adminBridge.workspacePath = undefined
     }
   }, [
@@ -532,6 +555,7 @@ export function WorkspaceCanvasInner({
     nodeStore.nodesRef,
     canvasState.spacesRef,
     requestNodeClose,
+    nodeStore.createPgViewerNode,
     workspacePath,
     agentSettings.defaultTerminalProfileId,
     agentSettings.standardWindowSizeBucket,

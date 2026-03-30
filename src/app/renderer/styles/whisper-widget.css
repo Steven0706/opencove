@@ -1,11 +1,7 @@
 .whisper-widget {
-  position: fixed;
-  bottom: 16px;
-  right: 60px;
-  z-index: 100;
+  position: relative;
   display: flex;
   align-items: center;
-  flex-direction: row-reverse;
   gap: 6px;
 }
 
@@ -13,7 +9,6 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-direction: row-reverse;
 }
 
 .whisper-widget__mic-btn {
@@ -55,8 +50,16 @@
 }
 
 .whisper-widget__waveform {
+  position: absolute;
+  bottom: 44px;
+  right: 0;
   display: block;
   border-radius: 4px;
+}
+
+.whisper-widget__mic-btn--processing {
+  opacity: 0.7;
+  cursor: wait;
 }
 
 .whisper-widget__history-btn {
@@ -118,6 +121,9 @@
 }
 
 .whisper-widget__history {
+  position: absolute;
+  bottom: 44px;
+  right: 0;
   display: flex;
   align-items: flex-end;
   gap: 6px;
@@ -125,8 +131,9 @@
   border-radius: 12px;
   border: 1px solid var(--cove-node-border);
   background: var(--cove-node-surface);
-  box-shadow: 0 2px 8px var(--cove-node-shadow-color);
+  box-shadow: 0 4px 16px var(--cove-node-shadow-color);
   max-width: 360px;
+  animation: whisper-toast-in 0.12s ease-out;
 }
 
 .whisper-widget__history-back-btn {

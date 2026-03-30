@@ -386,6 +386,7 @@ export function WorkspaceCanvasView({
         />
 
         <Controls className="workspace-canvas__controls" showInteractive={false} />
+        <div className="workspace-canvas__controls-dock" />
       </ReactFlow>
 
       <WorkspaceSnapGuidesOverlay guides={snapGuides} />

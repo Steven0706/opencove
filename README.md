@@ -2,7 +2,7 @@
 
 # OpenCove 🌌
 
-**An infinite canvas for Claude Code, Codex, terminals, tasks, and notes.**
+**An infinite canvas for Claude Code, Codex, terminals, tasks, and notes — with remote web access.**
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Status](https://img.shields.io/badge/status-alpha-orange.svg)]()
@@ -11,7 +11,7 @@
 
 Keep every agent, terminal, task, and note on one infinite canvas.
 
-See parallel work at a glance, keep context visible, and resume exactly where you left off.
+See parallel work at a glance, keep context visible, and resume exactly where you left off — from your desktop or any browser on your network.
 
 [Download the latest builds](https://github.com/DeadWaveWave/opencove/releases) · [Read the Chinese README](./README_ZH.md)
 
@@ -30,6 +30,7 @@ It is built for workflows like:
 - Running multiple `Claude Code` or `Codex` sessions side by side
 - Keeping task plans, notes, and terminal output in one shared workspace
 - Switching projects without losing layout, context, or execution history
+- Accessing your workspace remotely from any device on your local network
 
 <img src="./assets/images/opencove_app_preview_readme.jpg" alt="OpenCove App Preview" width="100%" />
 
@@ -39,6 +40,10 @@ It is built for workflows like:
 - **🤖 Built for CLI agents**: Optimized for `Claude Code`, `Codex`, and similar terminal-native agent workflows.
 - **🧠 Context stays visible**: Planning, execution, and results live together instead of getting buried in linear chat history.
 - **💾 Persistent workspaces**: Restore your viewport, layout, terminal output, and agent state after restarts.
+- **🌐 Remote web access**: Access your full workspace from any browser on your LAN — terminals, agents, and all.
+- **🎤 Voice input (Whisper)**: Record voice, transcribe via a private Whisper server, auto-copy to clipboard.
+- **🤖 Admin Agent**: An LLM-powered operator that can create nodes, write to terminals, read agent output, connect databases, and orchestrate multi-agent workflows via natural language.
+- **🗄️ PostgreSQL viewer**: Connect to external databases, browse tables, and run queries directly on the canvas.
 - **🗂️ Space archives**: Snapshot and revisit previous workspace states when you need to jump back into old contexts.
 - **🖼️ Rich media and smart layouts**: Paste images, multi-select nodes, use label colors, and tidy messy boards quickly.
 - **🔍 Global search and control center**: Search across the canvas and terminal output, then manage active sessions from one place.
@@ -53,6 +58,7 @@ OpenCove is designed around a simple idea: **agent workflows are easier to reaso
 | **Linear amnesia**: context disappears into long chat histories. | **Spatial context**: important tasks, notes, and execution stay visible on the canvas. |
 | **Single-pane bottlenecks**: tabs and split panes force constant context switching. | **Parallel execution**: compare and monitor multiple agents without losing your place. |
 | **Opaque automation**: background agent work feels like a black box. | **Transparent actions**: terminals and side effects stay visible while work is happening. |
+| **Desk-locked access**: must sit at the dev machine to use your agents. | **Remote access**: open a browser on any device and pick up where you left off. |
 
 ## 🚀 Getting Started
 
@@ -95,18 +101,58 @@ pnpm install
 
 # 3. Start the dev environment
 pnpm dev
+
+# 4. (Optional) Build the web server for remote access
+pnpm build:web
 ```
 
 > See [RELEASING.md](docs/RELEASING.md) for more packager and build documentation.
+
+## 🌐 Remote Web Access
+
+OpenCove can serve its full UI to any browser on your local network. Run the desktop app on one machine, access it from anywhere.
+
+**How it works:**
+
+1. Launch OpenCove on your host machine (e.g., Mac Mini).
+2. The web server starts automatically on port 3200.
+3. Open `http://<host-ip>:3200` in any browser.
+4. You see the exact same workspace — terminals, agents, notes, everything synced in real-time.
+
+**Architecture:**
+
+```
+Browser (any device) ←HTTP/WS→ Proxy Server (child process) ←IPC→ Electron (host)
+```
+
+The proxy server has no independent runtime. All operations (PTY, persistence, agents, file system) are forwarded to the Electron main process. The browser is essentially a remote display — like a KVM over your network.
+
+**Features:**
+- Real-time terminal output streaming via WebSocket
+- Shared persistence (same SQLite database)
+- No authentication required (designed for trusted local networks)
+- No native modules needed on the client — just a browser
+
+**Standalone server mode** (without Electron):
+
+```bash
+pnpm build:web
+pnpm start:web --port=3200 --data-dir=~/.opencove-server
+```
 
 ## 🏗️ Technical Architecture
 
 OpenCove is built with modern, high-performance web standards:
 
-- **Framework**: Electron + React + TypeScript (via `electron-vite`)
-- **Canvas Engine**: `@xyflow/react` for buttery smooth infinite canvas interactions.
-- **Underlying Terminal**: `xterm.js` and `node-pty` powering full-fledged PTY runtimes.
-- **Testing**: `Vitest` and `Playwright` for robust unit and E2E regression testing.
+- **Framework**: Electron + React 19 + TypeScript (via `electron-vite`)
+- **Canvas Engine**: `@xyflow/react` for buttery smooth infinite canvas interactions
+- **Terminal**: `xterm.js` and `node-pty` powering full-fledged PTY runtimes
+- **State**: Zustand for React state management
+- **Persistence**: `better-sqlite3` + `drizzle-orm` for local SQLite storage
+- **Styling**: Tailwind CSS v4 with `cove` design-system prefix
+- **Web Server**: Express + ws (WebSocket) as an IPC proxy to Electron
+- **AI Integration**: Anthropic SDK, OpenAI-compatible endpoints (Ollama/Qwen), Whisper API
+- **Testing**: `Vitest` and `Playwright` for robust unit and E2E regression testing
 
 ## 🤝 Contributing
 

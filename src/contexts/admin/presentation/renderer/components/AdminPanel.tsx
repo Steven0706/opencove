@@ -170,6 +170,18 @@ export function AdminPanel({ onClose }: AdminPanelProps): JSX.Element {
           await window.opencoveApi.pty.write({ sessionId: node.data.sessionId, data: (toolInput.text as string) + '\r' })
           return JSON.stringify({ success: true })
         }
+        case 'read_terminal_content': {
+          const nodes = adminBridge.getNodes?.() ?? reactFlow.getNodes()
+          const node = nodes.find(n => n.id === toolInput.nodeId)
+          if (!node?.data.sessionId) return JSON.stringify({ error: 'Node/session not found' })
+          try {
+            const snap = await window.opencoveApi.pty.snapshot({ sessionId: node.data.sessionId })
+            const content = (snap as { data?: string })?.data ?? ''
+            // Strip ANSI escape sequences for cleaner reading
+            const clean = content.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '').replace(/\x1b\][^\x07]*\x07/g, '')
+            return JSON.stringify({ content: clean.slice(-4000) })
+          } catch (e) { return JSON.stringify({ error: e instanceof Error ? e.message : 'Unknown' }) }
+        }
         case 'read_agent_last_message': {
           const nodes = adminBridge.getNodes?.() ?? reactFlow.getNodes()
           const node = nodes.find(n => n.id === toolInput.nodeId)
@@ -196,6 +208,49 @@ export function AdminPanel({ onClose }: AdminPanelProps): JSX.Element {
           })
           if (!nodeId) return JSON.stringify({ error: 'Failed to create agent node' })
           return JSON.stringify({ success: true, nodeId, profile: profile.name, emoji: profile.emoji })
+        }
+        case 'create_database': {
+          if (!adminBridge.createPgViewerNode) return JSON.stringify({ error: 'Not available' })
+          const nodeId = adminBridge.createPgViewerNode()
+          return nodeId ? JSON.stringify({ success: true, nodeId }) : JSON.stringify({ error: 'Failed to create database node' })
+        }
+        case 'connect_database': {
+          const nodes = adminBridge.getNodes?.() ?? reactFlow.getNodes()
+          const node = nodes.find(n => n.id === toolInput.nodeId)
+          if (!node || node.data.kind !== 'pgViewer') return JSON.stringify({ error: 'Node not found or not a database viewer' })
+          try {
+            const result = await window.opencoveApi.pg.connect({
+              host: (toolInput.host as string) || 'localhost',
+              port: (toolInput.port as number) || 5432,
+              database: toolInput.database as string,
+              user: toolInput.user as string,
+              password: toolInput.password as string,
+            })
+            if (result.connectionId) {
+              adminBridge.updatePgViewerConnection?.(node.id, {
+                host: (toolInput.host as string) || 'localhost',
+                port: (toolInput.port as number) || 5432,
+                database: toolInput.database as string,
+                user: toolInput.user as string,
+                connectionId: result.connectionId,
+                isConnected: true,
+              })
+              return JSON.stringify({ success: true, connectionId: result.connectionId })
+            }
+            return JSON.stringify({ error: 'Connection failed' })
+          } catch (e) { return JSON.stringify({ error: e instanceof Error ? e.message : 'Connection failed' }) }
+        }
+        case 'query_database': {
+          const nodes = adminBridge.getNodes?.() ?? reactFlow.getNodes()
+          const node = nodes.find(n => n.id === toolInput.nodeId)
+          if (!node?.data.pgViewer?.connectionId) return JSON.stringify({ error: 'Node not connected to database' })
+          try {
+            const result = await window.opencoveApi.pg.query({
+              connectionId: node.data.pgViewer.connectionId,
+              sql: toolInput.sql as string,
+            })
+            return JSON.stringify({ rows: result.rows?.slice(0, 20), columns: result.columns, rowCount: result.rows?.length })
+          } catch (e) { return JSON.stringify({ error: e instanceof Error ? e.message : 'Query failed' }) }
         }
         case 'rename_node': {
           const num = toolInput.nodeNumber as number

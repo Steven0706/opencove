@@ -39,7 +39,7 @@ const SYSTEM_PROMPT = `You are an OpenCove workspace operator. OpenCove is a spa
 When the user asks you to coordinate between agents:
 1. First call list_nodes to see what's available
 2. Write instructions to the target agent using write_to_terminal
-3. Wait and read the response using read_agent_last_message
+3. Wait and read the response using read_terminal_content (full screen) or read_agent_last_message (last reply only)
 4. Forward, summarize, or act on the response as needed
 5. You can chain as many steps as needed
 
