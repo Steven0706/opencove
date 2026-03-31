@@ -8,6 +8,8 @@ import {
   type AgentProvider,
   type AgentSettings,
   type CanvasInputMode,
+  type CanvasWheelBehavior,
+  type CanvasWheelZoomModifier,
   type FocusNodeTargetZoom,
   type StandardWindowSizeBucket,
   type TaskTitleProvider,
@@ -27,7 +29,6 @@ import { TaskConfigurationSection } from './settingsPanel/TaskConfigurationSecti
 import { WorkerSection } from './settingsPanel/WorkerSection'
 import { WorkspaceSection } from './settingsPanel/WorkspaceSection'
 import type { WorkspaceState } from '@contexts/workspace/presentation/renderer/types'
-
 interface ProviderModelCatalogEntry {
   models: string[]
   source: string | null
@@ -35,7 +36,6 @@ interface ProviderModelCatalogEntry {
   isLoading: boolean
   error: string | null
 }
-
 interface SettingsPanelProps {
   settings: AgentSettings
   updateState: AppUpdateState | null
@@ -50,7 +50,6 @@ interface SettingsPanelProps {
   onInstallUpdate: () => void
   onClose: () => void
 }
-
 type CorePageId =
   | 'general'
   | 'worker'
@@ -89,15 +88,12 @@ const CORE_NAV_ITEMS: Array<{ id: CorePageId; labelKey: string; testId: string }
     testId: 'settings-section-nav-integrations',
   },
 ]
-
 function getWorkspacePageId(workspaceId: string): WorkspacePageId {
   return `workspace:${workspaceId}`
 }
-
 function isWorkspacePageId(pageId: SettingsPageId): pageId is WorkspacePageId {
   return pageId.startsWith('workspace:')
 }
-
 function createInitialInputState(): Record<AgentProvider, string> {
   return AGENT_PROVIDERS.reduce<Record<AgentProvider, string>>(
     (acc, provider) => {
@@ -166,6 +162,10 @@ export function SettingsPanel({
     onChange({ ...settings, standbyBannerShowPullRequest: enabled })
   const updateCanvasInputMode = (mode: CanvasInputMode): void =>
     onChange({ ...settings, canvasInputMode: mode })
+  const updateCanvasWheelBehavior = (behavior: CanvasWheelBehavior): void =>
+    onChange({ ...settings, canvasWheelBehavior: behavior })
+  const updateCanvasWheelZoomModifier = (modifier: CanvasWheelZoomModifier): void =>
+    onChange({ ...settings, canvasWheelZoomModifier: modifier })
   const updateStandardWindowSizeBucket = (bucket: StandardWindowSizeBucket): void =>
     onChange({ ...settings, standardWindowSizeBucket: bucket })
   const updateTerminalFontSize = (fontSize: number): void =>
@@ -430,6 +430,8 @@ export function SettingsPanel({
             {activePageId === 'canvas' ? (
               <CanvasSection
                 canvasInputMode={settings.canvasInputMode}
+                canvasWheelBehavior={settings.canvasWheelBehavior}
+                canvasWheelZoomModifier={settings.canvasWheelZoomModifier}
                 standardWindowSizeBucket={settings.standardWindowSizeBucket}
                 focusNodeOnClick={settings.focusNodeOnClick}
                 focusNodeTargetZoom={settings.focusNodeTargetZoom}
@@ -437,6 +439,8 @@ export function SettingsPanel({
                 terminalProfiles={terminalProfiles}
                 detectedDefaultTerminalProfileId={detectedDefaultTerminalProfileId}
                 onChangeCanvasInputMode={updateCanvasInputMode}
+                onChangeCanvasWheelBehavior={updateCanvasWheelBehavior}
+                onChangeCanvasWheelZoomModifier={updateCanvasWheelZoomModifier}
                 onChangeStandardWindowSizeBucket={updateStandardWindowSizeBucket}
                 onChangeDefaultTerminalProfileId={updateDefaultTerminalProfileId}
                 onChangeFocusNodeOnClick={updateFocusNodeOnClick}
