@@ -98,6 +98,7 @@ export function WorkspaceCanvasView({
   onToggleMagneticSnapping,
   createTerminalNode,
   createNoteNodeFromContextMenu,
+  createWebsiteNodeFromContextMenu,
   arrangeAll,
   arrangeCanvas,
   arrangeInSpace,
@@ -345,6 +346,8 @@ export function WorkspaceCanvasView({
         closeContextMenu={closeContextMenu}
         createTerminalNode={createTerminalNode}
         createNoteNodeFromContextMenu={createNoteNodeFromContextMenu}
+        createWebsiteNodeFromContextMenu={createWebsiteNodeFromContextMenu}
+        websiteWindowsEnabled={agentSettings.websiteWindowPolicy.enabled}
         openTaskCreator={openTaskCreator}
         openAgentLauncher={openAgentLauncher}
         agentProviderOrder={agentSettings.agentProviderOrder}
