@@ -350,6 +350,10 @@ export const zhCN = {
     labelColorFilterAll: '显示全部',
     clearLabelColorFilter: '清除颜色过滤',
   },
+  workspaceNodeNavigator: {
+    title_one: '{{count}} 个窗口',
+    title_other: '{{count}} 个窗口',
+  },
   labelColors: {
     title: '颜色标注',
     autoInherit: '自动（跟随 Space）',

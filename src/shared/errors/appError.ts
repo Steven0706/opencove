@@ -76,6 +76,8 @@ function createMessageMap(): Record<AppErrorCode, string> {
     'update.download_failed': 'Unable to download the update.',
     'update.install_failed': 'Unable to install the update.',
     'release_notes.get_current_failed': 'Unable to load release notes.',
+    'whisper.transcribe_failed': 'Unable to transcribe audio.',
+    'workspace.temp_image_save_failed': 'Unable to save the dropped image.',
   }
 }
 

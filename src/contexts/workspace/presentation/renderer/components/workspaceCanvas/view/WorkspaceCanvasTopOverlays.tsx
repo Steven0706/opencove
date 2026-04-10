@@ -1,9 +1,10 @@
 import React from 'react'
+import { useReactFlow, type Edge, type Node } from '@xyflow/react'
 import { ViewportMenuSurface } from '@app/renderer/components/ViewportMenuSurface'
-import { ChevronDown, Tag, X } from 'lucide-react'
+import { Bot, ChevronDown, Layers, TerminalSquare } from 'lucide-react'
 import { useTranslation } from '@app/renderer/i18n'
-import { LABEL_COLORS, type LabelColor } from '@shared/types/labelColor'
-import type { WorkspaceSpaceState } from '../../../types'
+import type { TerminalNodeData, WorkspaceSpaceState } from '../../../types'
+import { focusNodeInViewport } from '../helpers'
 import { WorkspaceSpaceSwitcher } from './WorkspaceSpaceSwitcher'
 
 interface WorkspaceCanvasTopOverlaysProps {
@@ -11,9 +12,7 @@ interface WorkspaceCanvasTopOverlaysProps {
   activateSpace: (spaceId: string) => void
   activateAllSpaces: () => void
   cancelSpaceRename: () => void
-  usedLabelColors: LabelColor[]
-  activeLabelColorFilter: LabelColor | null
-  onToggleLabelColorFilter: (color: LabelColor) => void
+  nodes: Node<TerminalNodeData>[]
   selectedNodeCount: number
 }
 
@@ -22,32 +21,24 @@ export function WorkspaceCanvasTopOverlays({
   activateSpace,
   activateAllSpaces,
   cancelSpaceRename,
-  usedLabelColors,
-  activeLabelColorFilter,
-  onToggleLabelColorFilter,
+  nodes,
   selectedNodeCount,
 }: WorkspaceCanvasTopOverlaysProps): React.JSX.Element | null {
   const { t } = useTranslation()
-  const [isFilterMenuOpen, setIsFilterMenuOpen] = React.useState(false)
-  const filterTriggerRef = React.useRef<HTMLButtonElement | null>(null)
+  const reactFlow = useReactFlow<Node<TerminalNodeData>, Edge>()
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false)
+  const triggerRef = React.useRef<HTMLButtonElement | null>(null)
 
-  const orderedUsedLabelColors = React.useMemo(() => {
-    const usedSet = new Set(usedLabelColors)
-    const ordered = LABEL_COLORS.filter(color => usedSet.has(color))
+  const navigableNodes = React.useMemo(
+    () => nodes.filter(node => node.data.kind === 'terminal' || node.data.kind === 'agent'),
+    [nodes],
+  )
 
-    if (activeLabelColorFilter && !usedSet.has(activeLabelColorFilter)) {
-      ordered.unshift(activeLabelColorFilter)
-    }
-
-    return ordered
-  }, [usedLabelColors, activeLabelColorFilter])
-
-  const filterMenuPlacement = React.useMemo(() => {
-    if (!isFilterMenuOpen) {
+  const menuPlacement = React.useMemo(() => {
+    if (!isMenuOpen) {
       return null
     }
-
-    const rect = filterTriggerRef.current?.getBoundingClientRect() ?? null
+    const rect = triggerRef.current?.getBoundingClientRect() ?? null
     return {
       type: 'point' as const,
       point: {
@@ -55,14 +46,24 @@ export function WorkspaceCanvasTopOverlays({
         y: (rect?.bottom ?? 12) + 6,
       },
       estimatedSize: {
-        width: 196,
-        height: 280,
+        width: 280,
+        height: 320,
       },
     }
-  }, [isFilterMenuOpen])
+  }, [isMenuOpen])
 
-  const hasAnyOverlay =
-    selectedNodeCount > 0 || spaces.length > 0 || orderedUsedLabelColors.length > 0
+  const handleSelectNode = React.useCallback(
+    (nodeId: string) => {
+      const node = reactFlow.getNode(nodeId)
+      if (node) {
+        focusNodeInViewport(reactFlow, node, { duration: 160, zoom: 1 })
+      }
+      setIsMenuOpen(false)
+    },
+    [reactFlow],
+  )
+
+  const hasAnyOverlay = selectedNodeCount > 0 || spaces.length > 0 || navigableNodes.length > 0
 
   if (!hasAnyOverlay) {
     return null
@@ -79,10 +80,10 @@ export function WorkspaceCanvasTopOverlays({
         />
       ) : null}
 
-      {orderedUsedLabelColors.length > 0 ? (
+      {navigableNodes.length > 0 ? (
         <>
           <div
-            className="workspace-label-color-filter"
+            className="workspace-node-navigator"
             onMouseDown={event => {
               event.stopPropagation()
             }}
@@ -91,109 +92,69 @@ export function WorkspaceCanvasTopOverlays({
             }}
           >
             <button
-              ref={filterTriggerRef}
+              ref={triggerRef}
               type="button"
-              className={`workspace-label-color-filter__trigger${isFilterMenuOpen ? ' workspace-label-color-filter__trigger--open' : ''}`}
-              data-testid="workspace-label-color-filter"
+              className={`workspace-node-navigator__trigger${isMenuOpen ? ' workspace-node-navigator__trigger--open' : ''}`}
+              data-testid="workspace-node-navigator"
               aria-haspopup="menu"
-              aria-expanded={isFilterMenuOpen}
+              aria-expanded={isMenuOpen}
               onClick={() => {
-                setIsFilterMenuOpen(previous => !previous)
+                setIsMenuOpen(previous => !previous)
               }}
             >
-              {activeLabelColorFilter ? (
-                <span
-                  className="cove-label-dot cove-label-dot--solid"
-                  data-cove-label-color={activeLabelColorFilter}
-                  aria-hidden="true"
-                />
-              ) : (
-                <Tag className="workspace-label-color-filter__icon" aria-hidden="true" />
-              )}
-              <span className="workspace-label-color-filter__label">
-                {activeLabelColorFilter
-                  ? t(`labelColors.${activeLabelColorFilter}`)
-                  : t('labelColors.title')}
+              <Layers className="workspace-node-navigator__icon" aria-hidden="true" />
+              <span className="workspace-node-navigator__label">
+                {t('workspaceNodeNavigator.title', { count: navigableNodes.length })}
               </span>
               <ChevronDown
-                className={`workspace-label-color-filter__chevron${isFilterMenuOpen ? ' workspace-label-color-filter__chevron--open' : ''}`}
+                className={`workspace-node-navigator__chevron${isMenuOpen ? ' workspace-node-navigator__chevron--open' : ''}`}
                 aria-hidden="true"
               />
             </button>
-
-            {activeLabelColorFilter ? (
-              <button
-                type="button"
-                className="workspace-label-color-filter__clear"
-                data-testid="workspace-label-color-filter-clear"
-                aria-label={t('workspaceCanvas.clearLabelColorFilter')}
-                title={t('workspaceCanvas.clearLabelColorFilter')}
-                onClick={event => {
-                  event.stopPropagation()
-                  onToggleLabelColorFilter(activeLabelColorFilter)
-                  setIsFilterMenuOpen(false)
-                }}
-              >
-                <X className="workspace-label-color-filter__clear-icon" aria-hidden="true" />
-              </button>
-            ) : null}
           </div>
 
-          {isFilterMenuOpen && filterMenuPlacement ? (
+          {isMenuOpen && menuPlacement ? (
             <ViewportMenuSurface
               open={true}
-              className="workspace-context-menu workspace-label-color-filter__menu"
-              data-testid="workspace-label-color-filter-menu"
-              placement={filterMenuPlacement}
+              className="workspace-context-menu workspace-node-navigator__menu"
+              data-testid="workspace-node-navigator-menu"
+              placement={menuPlacement}
               role="menu"
               onDismiss={() => {
-                setIsFilterMenuOpen(false)
+                setIsMenuOpen(false)
               }}
               dismissOnPointerDownOutside={true}
               dismissOnEscape={true}
-              dismissIgnoreRefs={[filterTriggerRef]}
+              dismissIgnoreRefs={[triggerRef]}
             >
-              <button
-                type="button"
-                role="menuitemradio"
-                aria-checked={activeLabelColorFilter === null}
-                data-testid="workspace-label-color-filter-all"
-                onClick={() => {
-                  if (activeLabelColorFilter) {
-                    onToggleLabelColorFilter(activeLabelColorFilter)
-                  }
-                  setIsFilterMenuOpen(false)
-                }}
-              >
-                <span
-                  className="workspace-label-color-menu__dot workspace-label-color-menu__dot--none"
-                  aria-hidden="true"
-                />
-                <span className="workspace-context-menu__label">
-                  {t('workspaceCanvas.labelColorFilterAll')}
-                </span>
-              </button>
-
-              {orderedUsedLabelColors.map(color => (
-                <button
-                  key={color}
-                  type="button"
-                  role="menuitemradio"
-                  aria-checked={activeLabelColorFilter === color}
-                  data-testid={`workspace-label-color-filter-${color}`}
-                  onClick={() => {
-                    onToggleLabelColorFilter(color)
-                    setIsFilterMenuOpen(false)
-                  }}
-                >
-                  <span
-                    className="workspace-label-color-menu__dot"
-                    data-cove-label-color={color}
-                    aria-hidden="true"
-                  />
-                  <span className="workspace-context-menu__label">{t(`labelColors.${color}`)}</span>
-                </button>
-              ))}
+              {navigableNodes.map(node => {
+                const isAgent = node.data.kind === 'agent'
+                return (
+                  <button
+                    key={node.id}
+                    type="button"
+                    role="menuitem"
+                    className="workspace-node-navigator__item"
+                    onClick={() => {
+                      handleSelectNode(node.id)
+                    }}
+                  >
+                    <span className="workspace-node-navigator__item-icon" aria-hidden="true">
+                      {isAgent ? <Bot size={14} /> : <TerminalSquare size={14} />}
+                    </span>
+                    <span className="workspace-node-navigator__item-title">
+                      {node.data.title || (isAgent ? 'Agent' : 'Terminal')}
+                    </span>
+                    {isAgent && node.data.status ? (
+                      <span
+                        className={`workspace-node-navigator__item-status workspace-node-navigator__item-status--${node.data.status}`}
+                      >
+                        {node.data.status}
+                      </span>
+                    ) : null}
+                  </button>
+                )
+              })}
             </ViewportMenuSurface>
           ) : null}
         </>

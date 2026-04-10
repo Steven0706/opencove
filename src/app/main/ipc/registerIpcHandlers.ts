@@ -14,6 +14,7 @@ import { createAppUpdateService } from '../../../contexts/update/infrastructure/
 import { registerReleaseNotesIpcHandlers } from '../../../contexts/releaseNotes/presentation/main-ipc/register'
 import { createReleaseNotesService } from '../../../contexts/releaseNotes/infrastructure/main/ReleaseNotesService'
 import { registerFilesystemIpcHandlers } from '../../../contexts/filesystem/presentation/main-ipc/register'
+import { registerWhisperIpcHandlers } from '../../../contexts/whisper/presentation/main-ipc/register'
 import { app, ipcMain } from 'electron'
 import type { PersistenceStore } from '../../../platform/persistence/sqlite/PersistenceStore'
 import { createPersistenceStore } from '../../../platform/persistence/sqlite/PersistenceStore'
@@ -140,6 +141,7 @@ export function registerIpcHandlers(deps?: {
     registerTaskIpcHandlers(approvedWorkspaces),
     registerSystemIpcHandlers(),
     registerWebsiteWindowIpcHandlers(),
+    registerWhisperIpcHandlers(),
   ]
 
   if (workerEndpointResolver) {

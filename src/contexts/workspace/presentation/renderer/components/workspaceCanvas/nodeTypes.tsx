@@ -111,7 +111,7 @@ function TerminalNodeType({
           : undefined
       }
       onTitleCommit={
-        data.kind === 'terminal'
+        data.kind === 'terminal' || data.kind === 'agent'
           ? nextTitle => {
               renameTerminalTitleRef.current(id, nextTitle)
             }

@@ -157,8 +157,11 @@ export function WorkspaceCanvasView({
 }: WorkspaceCanvasViewProps): React.JSX.Element {
   const reactFlowStore = useStoreApi()
   const isDragSurfaceSelectionMode = useStore(selectDragSurfaceSelectionMode)
-  const { labelColorFilter, setLabelColorFilter, usedLabelColors, filteredNodes, filteredEdges } =
-    useWorkspaceCanvasLabelColorFilter({ nodes, edges, spaces })
+  const { filteredNodes, filteredEdges } = useWorkspaceCanvasLabelColorFilter({
+    nodes,
+    edges,
+    spaces,
+  })
 
   useWorkspaceCanvasGlobalDismissals({
     contextMenu,
@@ -366,14 +369,7 @@ export function WorkspaceCanvasView({
         activateSpace={activateSpace}
         activateAllSpaces={activateAllSpaces}
         cancelSpaceRename={cancelSpaceRename}
-        usedLabelColors={usedLabelColors}
-        activeLabelColorFilter={labelColorFilter}
-        onToggleLabelColorFilter={color => {
-          closeContextMenu()
-          closeSpaceActionMenu()
-          clearNodeSelection()
-          setLabelColorFilter(previous => (previous === color ? null : color))
-        }}
+        nodes={nodes}
         selectedNodeCount={selectedNodeCount}
       />
 

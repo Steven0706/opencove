@@ -12,6 +12,7 @@ import {
   type CanvasImageMimeType,
 } from '@shared/contracts/dto'
 import type { ImageNodeData, Point, TerminalNodeData, WorkspaceSpaceState } from '../../../types'
+import { getRegisteredTerminal } from '../../terminalNode/terminalRegistry'
 import { resolveDefaultImageWindowSize } from '../constants'
 import { resolveNodePlacementAnchorFromViewportCenter, toErrorMessage } from '../helpers'
 import {
@@ -277,6 +278,38 @@ export function useWorkspaceCanvasImageImport({
     transfer.dropEffect = 'copy'
   }, [])
 
+  const deliverImageToTerminal = useCallback(
+    async (file: File, terminalNodeId: string) => {
+      try {
+        const terminal = getRegisteredTerminal(terminalNodeId)
+        if (!terminal) {
+          return false
+        }
+        const arrayBuffer = await file.arrayBuffer()
+        const bytes = new Uint8Array(arrayBuffer)
+        const mimeType = file.type as CanvasImageMimeType
+        const fileName =
+          typeof file.name === 'string' && file.name.trim().length > 0 ? file.name : null
+        const saveTempImage = window.opencoveApi?.workspace?.saveTempImage
+        if (typeof saveTempImage !== 'function') {
+          return false
+        }
+        const result = await saveTempImage({ bytes, mimeType, fileName })
+        // Use xterm's paste() so Claude Code sees bracketed-paste input
+        terminal.focus()
+        terminal.paste(result.filePath)
+        return true
+      } catch (error) {
+        onShowMessage?.(
+          t('messages.canvasImageImportFailed', { message: toErrorMessage(error) }),
+          'error',
+        )
+        return false
+      }
+    },
+    [onShowMessage, t],
+  )
+
   const handleCanvasDrop = useCallback<DragEventHandler<HTMLDivElement>>(
     event => {
       const transfer = event.dataTransfer
@@ -295,10 +328,25 @@ export function useWorkspaceCanvasImageImport({
       event.preventDefault()
       event.stopPropagation()
 
+      // Detect if drop target is inside a terminal/agent node
+      const targetEl = event.target instanceof Element ? event.target : null
+      const rfNodeEl = targetEl?.closest('.react-flow__node')
+      const droppedNodeId = rfNodeEl?.getAttribute('data-id') ?? null
+      if (droppedNodeId) {
+        const targetNode = nodesRef.current.find(node => node.id === droppedNodeId)
+        if (
+          targetNode &&
+          (targetNode.data.kind === 'terminal' || targetNode.data.kind === 'agent')
+        ) {
+          void deliverImageToTerminal(supportedImages[0], droppedNodeId)
+          return
+        }
+      }
+
       const flowCenter = reactFlow.screenToFlowPosition({ x: event.clientX, y: event.clientY })
       void importFiles(supportedImages, flowCenter)
     },
-    [importFiles, reactFlow],
+    [deliverImageToTerminal, importFiles, nodesRef, reactFlow],
   )
 
   return {

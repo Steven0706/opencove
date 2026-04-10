@@ -67,6 +67,8 @@ export const APP_ERROR_CODES = [
   'update.download_failed',
   'update.install_failed',
   'release_notes.get_current_failed',
+  'whisper.transcribe_failed',
+  'workspace.temp_image_save_failed',
 ] as const
 
 export type AppErrorCode = (typeof APP_ERROR_CODES)[number]

@@ -66,6 +66,10 @@ import type {
   WriteWorkspaceStateRawInput,
   WriteTerminalInput,
   DeleteCanvasImageInput,
+  SaveTempImageInput,
+  SaveTempImageResult,
+  WhisperTranscribeInput,
+  WhisperTranscribeResult,
   CopyEntryInput,
   RuntimeDiagnosticsLogInput,
   TerminalDiagnosticsLogInput,
@@ -260,6 +264,12 @@ const opencoveApi = {
       invokeIpc(IPC_CHANNELS.workspaceReadCanvasImage, payload),
     deleteCanvasImage: (payload: DeleteCanvasImageInput): Promise<void> =>
       invokeIpc(IPC_CHANNELS.workspaceDeleteCanvasImage, payload),
+    saveTempImage: (payload: SaveTempImageInput): Promise<SaveTempImageResult> =>
+      invokeIpc(IPC_CHANNELS.workspaceSaveTempImage, payload),
+  },
+  whisper: {
+    transcribe: (payload: WhisperTranscribeInput): Promise<WhisperTranscribeResult> =>
+      invokeIpc(IPC_CHANNELS.whisperTranscribe, payload),
   },
   worktree: {
     listBranches: (payload: ListGitBranchesInput): Promise<ListGitBranchesResult> =>

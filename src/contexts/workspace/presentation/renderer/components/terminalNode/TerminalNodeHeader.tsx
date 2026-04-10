@@ -31,7 +31,8 @@ export function TerminalNodeHeader({
   const [titleDraft, setTitleDraft] = useState(title)
   const [isCopyingLastMessage, setIsCopyingLastMessage] = useState(false)
 
-  const isTitleEditable = kind === 'terminal' && typeof onTitleCommit === 'function'
+  const isTitleEditable =
+    (kind === 'terminal' || kind === 'agent') && typeof onTitleCommit === 'function'
   const isAgentNode = kind === 'agent'
   const shouldRenderCopyLastMessageButton =
     isAgentNode &&

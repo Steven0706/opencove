@@ -48,6 +48,7 @@ import {
   selectViewportInteractionActive,
 } from './terminalNode/reactFlowState'
 import { TerminalNodeFrame } from './terminalNode/TerminalNodeFrame'
+import { registerTerminal, unregisterTerminal } from './terminalNode/terminalRegistry'
 import { resolveCanonicalNodeMinSize } from '../utils/workspaceNodeSizing'
 import type { TerminalNodeProps } from './TerminalNode.types'
 
@@ -202,6 +203,7 @@ export function TerminalNode({
     let activeRenderer = activatePreferredTerminalRenderer(terminal, terminalProvider)
     terminalRef.current = terminal
     fitAddonRef.current = fitAddon
+    registerTerminal(nodeId, terminal)
     const disposeTerminalFind = maybeBindTerminalSearchAddon({
       terminal,
       bindSearchAddonToFind,
@@ -426,6 +428,7 @@ export function TerminalNode({
       } else {
         disposeScrollbackPublish()
       }
+      unregisterTerminal(nodeId)
       terminal.dispose()
       terminalRef.current = null
       fitAddonRef.current = null

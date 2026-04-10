@@ -35,6 +35,16 @@ export interface DeleteCanvasImageInput {
   assetId: string
 }
 
+export interface SaveTempImageInput {
+  bytes: Uint8Array
+  mimeType: CanvasImageMimeType
+  fileName: string | null
+}
+
+export interface SaveTempImageResult {
+  filePath: string
+}
+
 export interface EnsureDirectoryInput {
   path: string
 }

@@ -329,7 +329,10 @@ export function useWorkspaceCanvasNodesStore({
           let hasChanged = false
 
           const nextNodes = prevNodes.map(node => {
-            if (node.id !== nodeId || node.data.kind !== 'terminal') {
+            if (node.id !== nodeId) {
+              return node
+            }
+            if (node.data.kind !== 'terminal' && node.data.kind !== 'agent') {
               return node
             }
 

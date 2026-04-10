@@ -232,6 +232,14 @@ export function installBrowserOpenCoveApi(): void {
       },
       readCanvasImage: async () => null,
       deleteCanvasImage: async () => undefined,
+      saveTempImage: async () => {
+        throw new Error('Temp image save is unavailable in browser runtime')
+      },
+    },
+    whisper: {
+      transcribe: async () => {
+        throw new Error('Whisper is unavailable in browser runtime')
+      },
     },
     worktree: {
       listBranches: async payload =>

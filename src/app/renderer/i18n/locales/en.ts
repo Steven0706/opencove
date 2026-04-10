@@ -354,6 +354,10 @@ export const en = {
     labelColorFilterAll: 'Show all',
     clearLabelColorFilter: 'Clear label filter',
   },
+  workspaceNodeNavigator: {
+    title_one: '{{count}} window',
+    title_other: '{{count}} windows',
+  },
   labelColors: {
     title: 'Label Color',
     autoInherit: 'Auto (inherit Space)',

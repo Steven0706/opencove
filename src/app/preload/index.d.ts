@@ -64,6 +64,10 @@ import type {
   WriteWorkspaceStateRawInput,
   WriteTerminalInput,
   DeleteCanvasImageInput,
+  SaveTempImageInput,
+  SaveTempImageResult,
+  WhisperTranscribeInput,
+  WhisperTranscribeResult,
   CopyEntryInput,
   RuntimeDiagnosticsLogInput,
   TerminalDiagnosticsLogInput,
@@ -172,6 +176,10 @@ export interface OpenCoveApi {
     writeCanvasImage: (payload: WriteCanvasImageInput) => Promise<void>
     readCanvasImage: (payload: ReadCanvasImageInput) => Promise<ReadCanvasImageResult | null>
     deleteCanvasImage: (payload: DeleteCanvasImageInput) => Promise<void>
+    saveTempImage: (payload: SaveTempImageInput) => Promise<SaveTempImageResult>
+  }
+  whisper: {
+    transcribe: (payload: WhisperTranscribeInput) => Promise<WhisperTranscribeResult>
   }
   worktree: {
     listBranches: (payload: ListGitBranchesInput) => Promise<ListGitBranchesResult>

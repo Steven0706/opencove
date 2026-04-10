@@ -83,6 +83,8 @@ export const IPC_CHANNELS = {
   agentResolveResumeSession: 'agent:resolve-resume-session',
   agentReadLastMessage: 'agent:read-last-message',
   taskSuggestTitle: 'task:suggest-title',
+  whisperTranscribe: 'whisper:transcribe',
+  workspaceSaveTempImage: 'workspace:save-temp-image',
   systemListFonts: 'system:list-fonts',
   workerGetStatus: 'worker:get-status',
   workerStart: 'worker:start',

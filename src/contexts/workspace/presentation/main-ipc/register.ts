@@ -1,5 +1,6 @@
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
-import { basename, resolve } from 'node:path'
+import { tmpdir } from 'node:os'
+import { basename, join, resolve } from 'node:path'
 import { app, clipboard, dialog, ipcMain } from 'electron'
 import { IPC_CHANNELS } from '../../../../shared/contracts/ipc'
 import type {
@@ -10,6 +11,8 @@ import type {
   OpenWorkspacePathInput,
   ReadCanvasImageInput,
   ReadCanvasImageResult,
+  SaveTempImageInput,
+  SaveTempImageResult,
   WorkspaceDirectory,
   WriteCanvasImageInput,
 } from '../../../../shared/contracts/dto'
@@ -189,6 +192,36 @@ export function registerWorkspaceIpcHandlers(
     { defaultErrorCode: 'workspace.canvas_image_delete_failed' },
   )
 
+  const MIME_TO_EXT: Record<string, string> = {
+    'image/png': '.png',
+    'image/jpeg': '.jpg',
+    'image/webp': '.webp',
+    'image/gif': '.gif',
+    'image/avif': '.avif',
+  }
+
+  registerHandledIpc(
+    IPC_CHANNELS.workspaceSaveTempImage,
+    async (_event, payload: SaveTempImageInput): Promise<SaveTempImageResult> => {
+      if (!payload || !(payload.bytes instanceof Uint8Array) || payload.bytes.byteLength === 0) {
+        throw createAppError('common.invalid_input', {
+          debugMessage: 'workspace:save-temp-image requires non-empty bytes',
+        })
+      }
+      const ext = MIME_TO_EXT[payload.mimeType] ?? '.png'
+      const safeName =
+        typeof payload.fileName === 'string' && payload.fileName.trim().length > 0
+          ? payload.fileName.trim().replace(/[^\w.\- ]/g, '_').replace(/\.[^.]+$/, '') + ext
+          : `opencove-drop-${Date.now()}${ext}`
+      const tempDir = join(tmpdir(), 'opencove-images')
+      await mkdir(tempDir, { recursive: true })
+      const filePath = join(tempDir, safeName)
+      await writeFile(filePath, Buffer.from(payload.bytes))
+      return { filePath }
+    },
+    { defaultErrorCode: 'workspace.temp_image_save_failed' },
+  )
+
   return {
     dispose: () => {
       ipcMain.removeHandler(IPC_CHANNELS.workspaceSelectDirectory)
@@ -199,6 +232,7 @@ export function registerWorkspaceIpcHandlers(
       ipcMain.removeHandler(IPC_CHANNELS.workspaceWriteCanvasImage)
       ipcMain.removeHandler(IPC_CHANNELS.workspaceReadCanvasImage)
       ipcMain.removeHandler(IPC_CHANNELS.workspaceDeleteCanvasImage)
+      ipcMain.removeHandler(IPC_CHANNELS.workspaceSaveTempImage)
     },
   }
 }
