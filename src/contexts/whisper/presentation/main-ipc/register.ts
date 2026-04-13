@@ -39,7 +39,7 @@ const envLocal = loadEnvLocal()
 const WHISPER_API_BASE =
   process.env.OPENCOVE_WHISPER_URL ||
   envLocal.OPENCOVE_WHISPER_URL ||
-  'http://localhost:9000/api'
+  'https://whisper.mypasses.org/api'
 const WHISPER_PASSWORD =
   process.env.OPENCOVE_WHISPER_PASSWORD || envLocal.OPENCOVE_WHISPER_PASSWORD || ''
 
